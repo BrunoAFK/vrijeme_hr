@@ -1,0 +1,48 @@
+{
+    "config": {
+        "title": "Vrijeme.hr Prognoza",
+        "step": {
+            "user": {
+                "title": "Odabir Države i Vrste Integracije",
+                "description": "Odaberite državu za koju želite podatke o vremenu i način prikaza",
+                "data": {
+                    "country": "Država",
+                    "integration_type": "Vrsta Integracije"
+                }
+            },
+            "sensor_selection": {
+                "title": "Odabir Senzora",
+                "description": "Odaberite koje senzore želite kreirati",
+                "data": {
+                    "sensor_options": "Odaberite Senzore za Prikaz"
+                }
+            },
+            "city": {
+                "title": "Odabir Grada",
+                "description": "Odaberite grad s popisa",
+                "data": {
+                    "city": "Grad",
+                    "update_interval": "Interval ažuriranja u sekundama (zadano: 3600)"
+                }
+            }
+        },
+        "error": {
+            "cannot_connect": "Neuspjelo povezivanje",
+            "invalid_auth": "Neispravna autentifikacija",
+            "unknown": "Neočekivana greška",
+            "no_cities": "Nisu pronađeni gradovi za odabranu državu"
+        },
+        "abort": {
+            "already_configured": "Ovaj grad je već konfiguriran"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "update_interval": "Interval ažuriranja u sekundama"
+                }
+            }
+        }
+    }
+}

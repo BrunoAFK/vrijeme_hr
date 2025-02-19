@@ -1,0 +1,48 @@
+{
+    "config": {
+        "title": "Vrijeme.hr Weather",
+        "step": {
+            "user": {
+                "title": "Select Country and Integration Type",
+                "description": "Choose which country's weather data to use and how you want to display it",
+                "data": {
+                    "country": "Country",
+                    "integration_type": "Integration Type"
+                }
+            },
+            "sensor_selection": {
+                "title": "Select Sensors",
+                "description": "Choose which sensors you want to create",
+                "data": {
+                    "sensor_options": "Select Sensors to Display"
+                }
+            },
+            "city": {
+                "title": "Select City",
+                "description": "Choose a city from the list",
+                "data": {
+                    "city": "City",
+                    "update_interval": "Update interval in seconds (default: 3600)"
+                }
+            }
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error",
+            "no_cities": "No cities found for selected country"
+        },
+        "abort": {
+            "already_configured": "This city is already configured"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "update_interval": "Update interval in seconds"
+                }
+            }
+        }
+    }
+}
