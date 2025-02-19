@@ -1,6 +1,6 @@
 {
+    "title": "Vrijeme.hr Weather",
     "config": {
-        "title": "Vrijeme.hr Weather",
         "step": {
             "user": {
                 "title": "Select Country and Integration Type",

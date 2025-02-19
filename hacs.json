@@ -1,6 +1,5 @@
 {
     "name": "Vrijeme.hr Weather",
     "render_readme": true,
-    "domains": ["sensor", "weather"],
     "homeassistant": "2024.1.0"
 }

@@ -4,12 +4,14 @@
 
 This integration provides weather data from Vrijeme.hr (Croatian Meteorological and Hydrological Service - DHMZ) for Home Assistant.
 
-## Data Attribution
-All data is provided by DHMZ (Croatian Meteorological and Hydrological Service). According to DHMZ's terms of use:
+## Data Source & Attribution
+This integration uses official XML weather data feeds provided by DHMZ (Croatian Meteorological and Hydrological Service - https://meteo.hr/). The data is sourced from:
+- Main data feed: https://vrijeme.hr/hrvatska_n.xml
+- Data update frequency: Every hour
 
-> Na ovoj stranici možete na jednostavan način doći do informacija glede naziva datoteka u XML formatu koje se mogu slobodno koristiti. Način korištenja prepuštamo Vama (direktni link na navedenu adresu, download datoteke...), a jedini uvjet korištenja jest obavezno navođenje DHMZ-a kao izvora korištenih podataka.
+The data usage is permitted by DHMZ with proper attribution. Visit [DHMZ XML Data Services](https://meteo.hr/proizvodi.php?section=podaci&param=xml_korisnici) for more information about their data services.
 
-The XML data used in this integration is freely available, with the only requirement being proper attribution to DHMZ as the data source. For more information about available XML data, visit [DHMZ XML Data Services](https://meteo.hr/proizvodi.php?section=podaci&param=xml_korisnici).
+[Rest of README remains the same...]a Services](https://meteo.hr/proizvodi.php?section=podaci&param=xml_korisnici).
 
 ## Features
 - Real-time weather data for Croatian cities
