@@ -1,0 +1,13 @@
+{
+    "domain": "vrijeme_hr",
+    "name": "Vrijeme.hr Weather",
+    "codeowners": ["@BrunoAFK"],
+    "config_flow": true,
+    "dependencies": [],
+    "documentation": "https://github.com/BrunoAFK/vrijeme_hr",
+    "homeassistant": "2024.1.0",
+    "iot_class": "cloud_polling",
+    "issue_tracker": "https://github.com/BrunoAFK/vrijeme_hr/issues",
+    "requirements": ["xmltodict"],
+    "version": "1.0.0"
+}
