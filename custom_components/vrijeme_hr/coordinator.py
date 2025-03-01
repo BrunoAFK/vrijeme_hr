@@ -5,22 +5,22 @@ import xmltodict
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from .const import CROATIA_URL, EUROPE_URL, WEATHER_MAPPING
 
-_LOGGER = logging.getLogger(name)
+_LOGGER = logging.getLogger(__name__)
 
 class VrijemeDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching Vrijeme.hr data."""
 
-    def init(self, hass, city, update_interval):
+    def __init__(self, hass, city, update_interval):
         """Initialize."""
-        self.city = city
-        self.url = CROATIA_URL
-
-        super().init(
+        super().__init__(
             hass,
             _LOGGER,
-            name=f"vrijemehr{city}",
+            name=f"vrijeme_hr_{city}",
             update_interval=timedelta(seconds=update_interval),
         )
+        
+        self.city = city
+        self.url = CROATIA_URL
 
     async def _async_update_data(self):
         """Fetch data from Vrijeme.hr."""
@@ -29,17 +29,17 @@ class VrijemeDataUpdateCoordinator(DataUpdateCoordinator):
                 async with session.get(self.url) as response:
                     if response.status != 200:
                         raise UpdateFailed(f"Error fetching data: {response.status}")
-
+                    
                     xml_data = await response.text()
                     data = xmltodict.parse(xml_data)
-
+                    
                     # Find the city data
                     city_data = None
                     for grad in data["Hrvatska"]["Grad"]:
                         if grad["GradIme"] == self.city:
                             city_data = grad
                             break
-
+                    
                     if city_data is None:
                         raise UpdateFailed(f"City {self.city} not found in data")
 

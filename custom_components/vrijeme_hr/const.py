@@ -12,26 +12,24 @@ from homeassistant.const import (
 
 DOMAIN = "vrijeme_hr"
 CONF_CITY = "city"
+CONF_COUNTRY = "country"
 CONF_UPDATE_INTERVAL = "update_interval"
 CONF_INTEGRATION_TYPE = "integration_type"
 CONF_SENSOR_OPTIONS = "sensor_options"
-CONF_ENABLE_FORECAST = "enable_forecast"
-CONF_DEBUG_LOGGING = "enable_debug_logging"
-
-FORECAST_DAYS = 7  # Since the XML provides 7 days of forecast
-FORECAST_HOURS = 24  # Hours per day for hourly forecast
 
 DEFAULT_UPDATE_INTERVAL = 3600
 
 CROATIA_URL = "https://vrijeme.hr/hrvatska_n.xml"
-FORECAST_URL = "https://prognoza.hr/sedam/hrvatska/7d_meteogrami.xml"
+EUROPE_URL = "https://vrijeme.hr/europa_n.xml"
+
+SUPPORTED_COUNTRIES = {
+    "croatia": "Croatia (Hrvatska)"
+}
 
 INTEGRATION_TYPES = {
     "sensor": "Sensors Only",
-    "weather": "Weather Only", 
-    "weather_forecast": "Weather with Forecast",
-    "both": "Both Weather and Sensors",
-    "both_forecast": "Both Weather, Sensors and Forecast"
+    "weather": "Weather Only",
+    "both": "Both Weather and Sensors"
 }
 
 AVAILABLE_SENSORS = {
@@ -109,68 +107,6 @@ SENSOR_TYPES = {
         "icon": "mdi:longitude",
         "device_class": None,
         "state_class": None,
-    }
-}
-
-FORECAST_SENSORS = {
-    "forecast_temperature": "Forecast Temperature",
-    "forecast_humidity": "Forecast Humidity",
-    "forecast_pressure": "Forecast Pressure",
-    "forecast_wind_speed": "Forecast Wind Speed",
-    "forecast_wind_direction": "Forecast Wind Direction",
-    "forecast_condition": "Forecast Condition",
-    "forecast_precipitation": "Forecast Precipitation"
-}
-
-FORECAST_SENSOR_TYPES = {
-    "forecast_temperature": {
-        "name": FORECAST_SENSORS["forecast_temperature"],
-        "unit": UnitOfTemperature.CELSIUS,
-        "icon": "mdi:thermometer",
-        "device_class": SensorDeviceClass.TEMPERATURE,
-        "state_class": SensorStateClass.MEASUREMENT,
-    },
-    "forecast_humidity": {
-        "name": FORECAST_SENSORS["forecast_humidity"],
-        "unit": PERCENTAGE,
-        "icon": "mdi:water-percent",
-        "device_class": SensorDeviceClass.HUMIDITY,
-        "state_class": SensorStateClass.MEASUREMENT,
-    },
-    "forecast_pressure": {
-        "name": FORECAST_SENSORS["forecast_pressure"],
-        "unit": UnitOfPressure.HPA,
-        "icon": "mdi:gauge",
-        "device_class": SensorDeviceClass.PRESSURE,
-        "state_class": SensorStateClass.MEASUREMENT,
-    },
-    "forecast_wind_speed": {
-        "name": FORECAST_SENSORS["forecast_wind_speed"],
-        "unit": UnitOfSpeed.KILOMETERS_PER_HOUR,
-        "icon": "mdi:weather-windy",
-        "device_class": None,
-        "state_class": SensorStateClass.MEASUREMENT,
-    },
-    "forecast_wind_direction": {
-        "name": FORECAST_SENSORS["forecast_wind_direction"],
-        "unit": "°",
-        "icon": "mdi:compass",
-        "device_class": None,
-        "state_class": None,
-    },
-    "forecast_condition": {
-        "name": FORECAST_SENSORS["forecast_condition"],
-        "unit": None,
-        "icon": "mdi:weather-partly-cloudy",
-        "device_class": None,
-        "state_class": None,
-    },
-    "forecast_precipitation": {
-        "name": FORECAST_SENSORS["forecast_precipitation"],
-        "unit": "mm",
-        "icon": "mdi:water",
-        "device_class": None,
-        "state_class": SensorStateClass.MEASUREMENT,
     }
 }
 

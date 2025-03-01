@@ -76,7 +76,7 @@ class VrijemeSensor(CoordinatorEntity, SensorEntity):
         self._attr_device_class = sensor_info["device_class"]
         self._attr_state_class = sensor_info["state_class"]
         self._attr_icon = sensor_info["icon"]
-        
+
         # Add attribution
         self._attr_attribution = "Data provided by DHMZ (Croatian Meteorological and Hydrological Service)"
         
@@ -93,13 +93,23 @@ class VrijemeSensor(CoordinatorEntity, SensorEntity):
     def native_value(self):
         """Return the state of the sensor."""
         if self.coordinator.data is None:
-            _LOGGER.warning("No data available for %s", self._attr_name)
+            _LOGGER.debug("%s: Coordinator data is None", self._attr_name)
             return None
             
-        value = self.coordinator.data.get(self._sensor_type)
+        # Special handling for condition sensor - look for "vrijeme" key instead and convert it
+        if self._sensor_type == "condition":
+            vrijeme = self.coordinator.data.get("vrijeme")
+            if vrijeme is None or vrijeme == '-':
+                return None
+            from .const import get_weather_condition
+            value = get_weather_condition(vrijeme)
+        else:
+            value = self.coordinator.data.get(self._sensor_type)
         
-        # Return None if value is None
-        if value is None:
+        _LOGGER.debug("%s: Raw value from coordinator: %s", self._attr_name, value)
+        
+        # Return None if value is None or '-'
+        if value is None or value == '-':
             return None
             
         # Special handling for different sensor types
@@ -112,11 +122,18 @@ class VrijemeSensor(CoordinatorEntity, SensorEntity):
                 "W": 270, "WNW": 292.5, "NW": 315, "NNW": 337.5,
                 "C": None  # Handle 'C' by returning None
             }
-            return direction_map.get(value, value)
+            converted_value = direction_map.get(value, value)
+            _LOGGER.debug("%s: Converted wind direction from %s to %s", 
+                        self._attr_name, value, converted_value)
+            return converted_value
             
         elif self._sensor_type == "pressure_tendency":
-            return self._process_pressure_trend(value)
-            
+            converted_value = self._process_pressure_trend(value)
+            _LOGGER.debug("%s: Converted pressure tendency from %s to %s", 
+                        self._attr_name, value, converted_value)
+            return converted_value
+        
+        _LOGGER.debug("%s: Returning value: %s", self._attr_name, value)    
         return value
 
     def _process_pressure_trend(self, value: str) -> Optional[float]:

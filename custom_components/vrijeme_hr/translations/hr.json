@@ -1,28 +1,27 @@
 {
+    "title": "Vrijeme.hr Prognoza",
     "config": {
-        "title": "Vrijeme.hr Prognoza",
         "step": {
             "user": {
-                "title": "Odabir Države i Vrste Integracije",
-                "description": "Odaberite državu za koju želite podatke o vremenu i način prikaza",
+                "title": "Odabir Vrste Prikaza",
+                "description": "Odaberite kako želite prikazati podatke o vremenu",
                 "data": {
-                    "country": "Država",
-                    "integration_type": "Vrsta Integracije"
+                    "integration_type": "Način Prikaza"
                 }
             },
             "sensor_selection": {
-                "title": "Odabir Senzora",
-                "description": "Odaberite koje senzore želite kreirati",
+                "title": "Dostupni Podaci o Vremenu",
+                "description": "Odaberite koje podatke o vremenu želite pratiti",
                 "data": {
-                    "sensor_options": "Odaberite Senzore za Prikaz"
+                    "sensor_options": "Meteorološki Podaci"
                 }
             },
             "city": {
-                "title": "Odabir Grada",
-                "description": "Odaberite grad s popisa",
+                "title": "Postavke Lokacije",
+                "description": "Odaberite grad i učestalost ažuriranja",
                 "data": {
                     "city": "Grad",
-                    "update_interval": "Interval ažuriranja u sekundama (zadano: 3600)"
+                    "update_interval": "Učestalost ažuriranja u sekundama (zadano: 3600)"
                 }
             }
         },
@@ -40,7 +39,7 @@
         "step": {
             "init": {
                 "data": {
-                    "update_interval": "Interval ažuriranja u sekundama"
+                    "update_interval": "Učestalost ažuriranja u sekundama"
                 }
             }
         }

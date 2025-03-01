@@ -3,23 +3,15 @@
     "config": {
         "step": {
             "user": {
-                "title": "Select Country and Integration Type",
-                "description": "Choose which country's weather data to use and how you want to display it",
+                "title": "Select Integration Type",
+                "description": "Choose how you want to display weather data",
                 "data": {
-                    "country": "Country",
                     "integration_type": "Integration Type"
                 }
             },
-            "sensor_selection": {
-                "title": "Select Sensors",
-                "description": "Choose which sensors you want to create",
-                "data": {
-                    "sensor_options": "Select Sensors to Display"
-                }
-            },
             "city": {
-                "title": "Select City",
-                "description": "Choose a city from the list",
+                "title": "Location Settings",
+                "description": "Select city and update frequency",
                 "data": {
                     "city": "City",
                     "update_interval": "Update interval in seconds (default: 3600)"

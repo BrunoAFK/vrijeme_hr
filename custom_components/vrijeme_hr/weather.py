@@ -3,7 +3,7 @@ from homeassistant.components.weather import WeatherEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN, get_weather_condition  # Import the function here
+from .const import DOMAIN, get_weather_condition
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities):
     """Set up Vrijeme.hr weather platform."""
@@ -13,13 +13,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 class VrijemeWeather(WeatherEntity):
     """Implementation of Vrijeme.hr weather platform."""
 
-    def init(self, coordinator, config):
+    def __init__(self, coordinator, config):
         """Initialize the sensor."""
+        super().__init__()
         self.coordinator = coordinator
         self._config = config
-        self._attr_unique_id = f"vrijemeweather{config['city']}"
+        self._attr_unique_id = f"vrijeme_weather_{config['city']}"
         self._attr_name = f"Vrijeme.hr {config['city']}"
-
+        
         # Add device info
         self._attr_device_info = {
             "identifiers": {(DOMAIN, config['city'])},
@@ -28,6 +29,12 @@ class VrijemeWeather(WeatherEntity):
             "model": "Weather Station",
             "configuration_url": "https://vrijeme.hr/",
         }
+
+    @property
+    def condition(self):
+        """Return current condition."""
+        vrijeme = self.coordinator.data.get("vrijeme", "")
+        return get_weather_condition(vrijeme)
 
     @property
     def native_temperature(self):
@@ -53,9 +60,3 @@ class VrijemeWeather(WeatherEntity):
     def wind_bearing(self):
         """Return the current wind bearing."""
         return self.coordinator.data.get("wind_direction")
-
-    @property
-    def condition(self):
-        """Return current condition."""
-        vrijeme = self.coordinator.data.get("vrijeme", "")
-        return get_weather_condition(vrijeme)

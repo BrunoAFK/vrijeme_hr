@@ -2,13 +2,19 @@
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
 
-This integration provides weather data from Vrijeme.hr (Croatian Meteorological and Hydrological Service - DHMZ) for Home Assistant.
+This integration provides current weather data from Vrijeme.hr (Croatian Meteorological and Hydrological Service - DHMZ) for Home Assistant. It's primarily designed for accessing detailed current weather sensor data, as forecast data is not available through DHMZ's XML feed.
 
 ## Features
-- Real-time weather data for Croatian cities
-- Supports both sensor and weather entities
+- Real-time weather sensor data for Croatian cities
+- Available as both sensor entities and a basic weather entity
 - Configurable update interval
-- Multiple sensor options (temperature, humidity, pressure, wind, etc.)
+- Multiple sensor options with high-precision measurements
+
+## Recommended Usage
+This integration is most effective when used for its sensor entities, which provide accurate current weather measurements. While a weather entity is available, it only shows current conditions without forecast data.
+
+### Recommended Frontend Cards
+To make the most of this integration's sensor data, consider using [Weather Chart Card](https://github.com/mlamberts78/weather-chart-card) custom card.
 
 ## Installation
 
@@ -68,7 +74,16 @@ The data usage is permitted by DHMZ with proper attribution. Visit [DHMZ XML Dat
 For more information about available XML services, visit the [DHMZ XML Data Services page](https://meteo.hr/proizvodi.php?section=podaci&param=xml_korisnici).
 
 ## License
-MIT License
+This integration is licensed under the Apache License 2.0.
+
+### Data License
+The weather data is provided by DHMZ (Croatian Meteorological and Hydrological Service - https://meteo.hr/) under the Open License - The Republic of Croatia. The data usage is permitted with the following conditions:
+- The source (DHMZ) must be properly attributed
+- Any modifications must be clearly stated
+- The data can be used for both commercial and non-commercial purposes
+- The data can be integrated into other applications and services
+
+This integration complies with all DHMZ's data usage requirements and properly attributes all data to DHMZ as the source.
 
 ## Credits
 - All weather data is provided by DHMZ (Croatian Meteorological and Hydrological Service)
