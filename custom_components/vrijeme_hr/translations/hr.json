@@ -6,14 +6,12 @@
                 "title": "Odabir Vrste Prikaza",
                 "description": "Odaberite kako želite prikazati podatke o vremenu",
                 "data": {
-                    "integration_type": "Način Prikaza"
-                }
-            },
-            "sensor_selection": {
-                "title": "Dostupni Podaci o Vremenu",
-                "description": "Odaberite koje podatke o vremenu želite pratiti",
-                "data": {
-                    "sensor_options": "Meteorološki Podaci"
+                    "integration_type": "Način Prikaza",
+                    "integration_type_options": {
+                        "sensor": "Samo senzori",
+                        "weather": "Samo vremenska prognoza",
+                        "both": "Prognoza i senzori"
+                    }
                 }
             },
             "city": {
@@ -21,7 +19,8 @@
                 "description": "Odaberite grad i učestalost ažuriranja",
                 "data": {
                     "city": "Grad",
-                    "update_interval": "Učestalost ažuriranja u sekundama (zadano: 3600)"
+                    "update_interval": "Učestalost ažuriranja u sekundama (zadano: 3600)",
+                    "sensor_options": "Meteorološki Podaci za Prikaz"
                 }
             }
         },

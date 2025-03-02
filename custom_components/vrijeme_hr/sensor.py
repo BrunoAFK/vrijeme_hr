@@ -21,7 +21,7 @@ from .const import (
     DOMAIN,
     SENSOR_TYPES,
     CONF_INTEGRATION_TYPE,
-    CONF_SENSOR_OPTIONS,
+    CONF_SENSOR_OPTIONS,  # Changed from CONF_SENSORS to CONF_SENSOR_OPTIONS
 )
 
 _LOGGER = logging.getLogger(__name__)

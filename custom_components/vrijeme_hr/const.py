@@ -15,7 +15,7 @@ CONF_CITY = "city"
 CONF_COUNTRY = "country"
 CONF_UPDATE_INTERVAL = "update_interval"
 CONF_INTEGRATION_TYPE = "integration_type"
-CONF_SENSOR_OPTIONS = "sensor_options"
+CONF_WEATHER_SENSORS = "weather_sensors"  # instead of sensor_options
 
 DEFAULT_UPDATE_INTERVAL = 3600
 
@@ -26,11 +26,8 @@ SUPPORTED_COUNTRIES = {
     "croatia": "Croatia (Hrvatska)"
 }
 
-INTEGRATION_TYPES = {
-    "sensor": "Sensors Only",
-    "weather": "Weather Only",
-    "both": "Both Weather and Sensors"
-}
+INTEGRATION_TYPES = ["sensor", "weather", "both"]
+CONF_SENSOR_OPTIONS = "sensor_options"
 
 AVAILABLE_SENSORS = {
     "temperature": "Temperature",
