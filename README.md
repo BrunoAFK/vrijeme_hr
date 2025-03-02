@@ -2,19 +2,19 @@
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
 
-This integration provides current weather data from Vrijeme.hr (Croatian Meteorological and Hydrological Service - DHMZ) for Home Assistant. It's primarily designed for accessing detailed current weather sensor data, as forecast data is not available through DHMZ's XML feed.
+This integration provides **current weather data** from meteo.hr (Croatian Meteorological and Hydrological Service - DHMZ) for Home Assistant. **Please note that this integration does not retrieve forecast data, only current conditions are provided.** The XML feed is updated approximately once per hour.
 
 ## Features
-- Real-time weather sensor data for Croatian cities
+- Weather sensor data for Croatian cities
 - Available as both sensor entities and a basic weather entity
 - Configurable update interval
-- Multiple sensor options with high-precision measurements
+- Multiple sensor options
 
 ## Recommended Usage
-This integration is most effective when used for its sensor entities, which provide accurate current weather measurements. While a weather entity is available, it only shows current conditions without forecast data.
+This integration is most effective when used for its sensor entities, which provide current weather measurements. While a weather entity is available, it only shows the current conditions and does not include forecast data.
 
 ### Recommended Frontend Cards
-To make the most of this integration's sensor data, consider using [Weather Chart Card](https://github.com/mlamberts78/weather-chart-card) custom card.
+To make the most of this integration's sensor data, consider using the [Weather Chart Card](https://github.com/mlamberts78/weather-chart-card) custom card.
 
 ## Installation
 
@@ -42,7 +42,7 @@ To make the most of this integration's sensor data, consider using [Weather Char
    - Select integration type (sensors, weather, or both)
    - Select your city
    - Configure update interval
-   - Select desired sensors (if "both" option selected)
+   - Select desired sensors (if "both" option is selected)
 
 ## Available Sensors
 - Temperature
@@ -59,25 +59,18 @@ To make the most of this integration's sensor data, consider using [Weather Char
 All major Croatian cities with DHMZ weather stations are supported.
 
 ## Support
-- For bugs/feature requests, please create an issue in the GitHub repository
-- For questions, please use the Home Assistant community forum
+For bugs or feature requests, please create an issue in the GitHub repository.
 
 ## Data Source & Attribution
-This integration uses official XML weather data feeds provided by DHMZ (Croatian Meteorological and Hydrological Service - https://meteo.hr/). The data is sourced from:
-- Main data feed: https://vrijeme.hr/hrvatska_n.xml
-- Data update frequency: Every hour
+This integration uses official XML weather data feeds provided by DHMZ. The XML feed is available at [vrijeme.hr](https://vrijeme.hr/hrvatska_n.xml) while the official data provider site is [meteo.hr](https://meteo.hr/). The XML data is updated approximately once per hour.
 
 The data usage is permitted by DHMZ with proper attribution. Visit [DHMZ XML Data Services](https://meteo.hr/proizvodi.php?section=podaci&param=xml_korisnici) for more information about their data services.
-
-[Rest of README remains the same...]a Services](https://meteo.hr/proizvodi.php?section=podaci&param=xml_korisnici).
-
-For more information about available XML services, visit the [DHMZ XML Data Services page](https://meteo.hr/proizvodi.php?section=podaci&param=xml_korisnici).
 
 ## License
 This integration is licensed under the Apache License 2.0.
 
 ### Data License
-The weather data is provided by DHMZ (Croatian Meteorological and Hydrological Service - https://meteo.hr/) under the Open License - The Republic of Croatia. The data usage is permitted with the following conditions:
+The weather data is provided by DHMZ (Croatian Meteorological and Hydrological Service) under the Open License - The Republic of Croatia. The data usage is permitted with the following conditions:
 - The source (DHMZ) must be properly attributed
 - Any modifications must be clearly stated
 - The data can be used for both commercial and non-commercial purposes
