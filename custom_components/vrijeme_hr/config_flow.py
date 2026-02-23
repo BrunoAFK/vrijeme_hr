@@ -1,4 +1,4 @@
-"""Config flow for Vrijeme.hr integration."""
+"""Config flow for Vrijeme HR integration."""
 from typing import Any, Dict, Optional
 import voluptuous as vol
 import aiohttp
@@ -43,8 +43,8 @@ async def get_available_cities() -> list[str]:
         _LOGGER.error("Error fetching cities: %s", err)
         return []
 
-class VrijemeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Vrijeme.hr."""
+class VrijemeHrvatskaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for Vrijeme HR."""
 
     VERSION = 1
     
@@ -60,7 +60,7 @@ class VrijemeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(config_entry):
         """Get the options flow for this handler."""
-        return VrijemeOptionsFlow()
+        return VrijemeHrvatskaOptionsFlow()
 
     async def async_step_user(self, user_input: Optional[Dict[str, Any]] = None) -> FlowResult:
         """Handle the initial step."""
@@ -161,7 +161,7 @@ class VrijemeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data[CONF_SENSOR_OPTIONS] = user_input.get(CONF_SENSOR_OPTIONS, [])
 
             return self.async_create_entry(
-                title=f"Vrijeme.hr {selected_city}",
+                title=f"Vrijeme HR {selected_city}",
                 data=data
             )
 
@@ -184,8 +184,8 @@ class VrijemeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(schema)
         )
 
-class VrijemeOptionsFlow(config_entries.OptionsFlow):
-    """Handle Vrijeme options."""
+class VrijemeHrvatskaOptionsFlow(config_entries.OptionsFlow):
+    """Handle Vrijeme HR options."""
 
     async def async_step_init(self, user_input=None):
         """Manage the options."""

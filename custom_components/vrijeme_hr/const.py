@@ -1,4 +1,4 @@
-"""Constants for the Vrijeme.hr integration."""
+"""Constants for the Vrijeme HR integration."""
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorStateClass,

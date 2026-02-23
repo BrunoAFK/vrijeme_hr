@@ -8,8 +8,8 @@ from .const import CROATIA_URL
 
 _LOGGER = logging.getLogger(__name__)
 
-class VrijemeDataUpdateCoordinator(DataUpdateCoordinator):
-    """Class to manage fetching Vrijeme.hr data."""
+class VrijemeHrvatskaDataUpdateCoordinator(DataUpdateCoordinator):
+    """Class to manage fetching weather feed data."""
 
     def __init__(self, hass, city, update_interval):
         """Initialize."""
@@ -55,7 +55,7 @@ class VrijemeDataUpdateCoordinator(DataUpdateCoordinator):
             return None
 
     async def _async_update_data(self):
-        """Fetch data from Vrijeme.hr."""
+        """Fetch data from source feed."""
         session = async_get_clientsession(self.hass)
         try:
             async with session.get(self.url, timeout=30) as response:

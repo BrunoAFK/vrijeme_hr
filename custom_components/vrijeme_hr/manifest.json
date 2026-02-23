@@ -1,6 +1,6 @@
 {
     "domain": "vrijeme_hr",
-    "name": "Vrijeme.hr Weather",
+    "name": "Vrijeme HR",
     "codeowners": ["@BrunoAFK"],
     "config_flow": true,
     "dependencies": [],

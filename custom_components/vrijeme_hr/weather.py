@@ -1,4 +1,4 @@
-"""Weather platform for Vrijeme.hr integration."""
+"""Weather platform for Vrijeme HR integration."""
 from homeassistant.components.weather import WeatherEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -7,27 +7,27 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN, get_weather_condition
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities):
-    """Set up Vrijeme.hr weather platform."""
+    """Set up Vrijeme HR weather platform."""
     coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
-    async_add_entities([VrijemeWeather(coordinator, entry.data)])
+    async_add_entities([VrijemeHrvatskaEntity(coordinator, entry.data)])
 
-class VrijemeWeather(CoordinatorEntity, WeatherEntity):
-    """Implementation of Vrijeme.hr weather platform."""
+class VrijemeHrvatskaEntity(CoordinatorEntity, WeatherEntity):
+    """Implementation of Vrijeme HR weather platform."""
 
     def __init__(self, coordinator, config):
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._config = config
-        self._attr_unique_id = f"vrijeme_weather_{config['city']}"
-        self._attr_name = f"Vrijeme.hr {config['city']}"
+        self._attr_unique_id = f"vrijeme_hr_{config['city']}"
+        self._attr_name = f"Vrijeme HR {config['city']}"
         
         # Add device info
         self._attr_device_info = {
             "identifiers": {(DOMAIN, config['city'])},
-            "name": f"Vrijeme.hr {config['city']}",
+            "name": f"Vrijeme HR {config['city']}",
             "manufacturer": "DHMZ",
             "model": "Weather Station",
-            "configuration_url": "https://vrijeme.hr/",
+            "configuration_url": "https://meteo.hr/",
         }
 
     @property

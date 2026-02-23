@@ -1,4 +1,4 @@
-"""Support for Vrijeme.hr sensors."""
+"""Support for Vrijeme HR sensors."""
 import logging
 from typing import Any, Optional
 
@@ -27,7 +27,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities):
-    """Set up the Vrijeme.hr sensor."""
+    """Set up the Vrijeme HR sensor."""
     coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
     
     try:
@@ -43,7 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         entities = []
         for sensor_type, sensor_info in available_sensors.items():
             entities.append(
-                VrijemeSensor(
+                VrijemeHrvatskaSensor(
                     coordinator,
                     sensor_type,
                     sensor_info,
@@ -58,11 +58,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
             _LOGGER.warning("No sensors to set up for %s based on configuration", entry.data["city"])
         
     except Exception as err:
-        _LOGGER.error("Error setting up Vrijeme.hr sensors: %s", err, exc_info=True)
+        _LOGGER.error("Error setting up Vrijeme HR sensors: %s", err, exc_info=True)
         raise
 
-class VrijemeSensor(CoordinatorEntity, SensorEntity):
-    """Representation of a Vrijeme.hr sensor."""
+class VrijemeHrvatskaSensor(CoordinatorEntity, SensorEntity):
+    """Representation of a Vrijeme HR sensor."""
 
     def __init__(self, coordinator, sensor_type, sensor_info, city):
         """Initialize the sensor."""
@@ -70,7 +70,7 @@ class VrijemeSensor(CoordinatorEntity, SensorEntity):
         self._sensor_type = sensor_type
         self._sensor_info = sensor_info
         self._city = city
-        self._attr_unique_id = f"vrijeme_{city}_{sensor_type}"
+        self._attr_unique_id = f"vrijeme_hr_{city}_{sensor_type}"
         self._attr_name = f"{city} {sensor_info['name']}"
         self._attr_native_unit_of_measurement = sensor_info["unit"]
         self._attr_device_class = sensor_info["device_class"]
@@ -83,10 +83,10 @@ class VrijemeSensor(CoordinatorEntity, SensorEntity):
         # Add device info
         self._attr_device_info = {
             "identifiers": {(DOMAIN, city)},
-            "name": f"Vrijeme.hr {city}",
+            "name": f"Vrijeme HR {city}",
             "manufacturer": "DHMZ",
             "model": "Weather Station",
-            "configuration_url": "https://vrijeme.hr/",
+            "configuration_url": "https://meteo.hr/",
         }
 
     @property

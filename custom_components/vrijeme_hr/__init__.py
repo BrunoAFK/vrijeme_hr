@@ -1,20 +1,20 @@
-"""The Vrijeme.hr integration."""
+"""The Vrijeme HR integration."""
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN, CONF_INTEGRATION_TYPE, DEFAULT_UPDATE_INTERVAL
-from .coordinator import VrijemeDataUpdateCoordinator
+from .coordinator import VrijemeHrvatskaDataUpdateCoordinator
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Vrijeme.hr from a config entry."""
+    """Set up Vrijeme HR from a config entry."""
     config = {**entry.data, **entry.options}
     integration_type = config.get(CONF_INTEGRATION_TYPE, "sensor")
     update_interval = int(
         config.get("update_interval", entry.data.get("update_interval", DEFAULT_UPDATE_INTERVAL))
     )
 
-    coordinator = VrijemeDataUpdateCoordinator(
+    coordinator = VrijemeHrvatskaDataUpdateCoordinator(
         hass=hass,
         city=entry.data["city"],
         update_interval=update_interval
