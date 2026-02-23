@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VrijemeHR — Home Assistant Integration</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@400;500;700;800&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+<!-- Init: theme + lang before paint -->
+<script>
+(function(){
+  var tc=document.cookie.match(/theme=(dark|light)/);
+  var isDark=tc?tc[1]==='dark':window.matchMedia('(prefers-color-scheme: dark)').matches;
+  if(isDark)document.documentElement.classList.add('dark');
+  var lc=document.cookie.match(/lang=(hr|en)/);
+  var lang;
+  if(lc){lang=lc[1];}
+  else{var bl=(navigator.language||'en').toLowerCase();lang=bl.startsWith('hr')||bl.startsWith('sr')||bl.startsWith('bs')?'hr':'en';}
+  document.documentElement.setAttribute('data-lang',lang);
+  document.documentElement.lang=lang;
+  window.__lang=lang;
+})();
+</script>
+
+<script>
+tailwind.config={
+  darkMode:'class',
+  theme:{extend:{
+    fontFamily:{
+      display:['Cabinet Grotesk','sans-serif'],
+      body:['Instrument Sans','sans-serif'],
+      mono:['JetBrains Mono','monospace'],
+    },
+    animation:{'pulse-slow':'pulse 4s ease-in-out infinite'},
+    colors:{
+      sky2:{'50':'#f0f9ff','100':'#e0f2fe','200':'#bae6fd','300':'#7dd3fc','400':'#38bdf8','500':'#0ea5e9','600':'#0284c7','700':'#0369a1','800':'#075985','900':'#0c4a6e'},
+    }
+  }}
+}
+</script>
+
+<style>
+  :root{--accent:#0ea5e9;--accent-dark:#0284c7;--accent-glow:rgba(14,165,233,.15);}
+  html.dark{--accent:#38bdf8;--accent-dark:#0ea5e9;--accent-glow:rgba(56,189,248,.12);}
+
+  body{font-family:'Instrument Sans',sans-serif;font-size:17px;line-height:1.65;overflow-x:hidden;}
+
+  /* ── Background: scattered weather symbols ── */
+  .weather-bg{position:absolute;inset:0;overflow:hidden;pointer-events:none;}
+  .weather-bg span{
+    position:absolute;font-size:clamp(1.5rem,4vw,3rem);
+    opacity:0;animation:floatIn 6s ease-in-out infinite;
+    filter:blur(0px);
+    user-select:none;
+  }
+  @keyframes floatIn{
+    0%{opacity:0;transform:translateY(20px) scale(0.8);}
+    20%{opacity:.12;}
+    80%{opacity:.12;}
+    100%{opacity:0;transform:translateY(-20px) scale(1.05);}
+  }
+
+  /* ── Horizon gradient ── */
+  .horizon{
+    background:linear-gradient(180deg,
+      transparent 0%,
+      rgba(14,165,233,.04) 50%,
+      rgba(14,165,233,.08) 100%);
+  }
+  html.dark .horizon{
+    background:linear-gradient(180deg,
+      transparent 0%,
+      rgba(14,165,233,.03) 50%,
+      rgba(14,165,233,.06) 100%);
+  }
+
+  /* ── Grid lines (subtle, horizontal) ── */
+  .data-grid{
+    background-image:repeating-linear-gradient(
+      0deg,
+      rgba(14,165,233,.04) 0px,
+      rgba(14,165,233,.04) 1px,
+      transparent 1px,
+      transparent 60px
+    );
+    animation:gridScroll 15s linear infinite;
+  }
+  @keyframes gridScroll{from{background-position:0 0;}to{background-position:0 60px;}}
+
+  /* ── Scroll reveal ── */
+  .reveal{opacity:0;transform:translateY(24px);transition:opacity .65s ease,transform .65s ease;}
+  .reveal.visible{opacity:1;transform:translateY(0);}
+
+  /* ── Code blocks ── */
+  .cb{background:rgba(14,165,233,.05);border:1px solid rgba(14,165,233,.2);border-radius:10px;}
+  html.dark .cb{background:rgba(56,189,248,.06);border-color:rgba(56,189,248,.22);}
+
+  /* ── Grad text ── */
+  .grad{background:linear-gradient(135deg,#0ea5e9,#38bdf8,#7dd3fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+
+  /* ── Cards ── */
+  .card{transition:all .25s ease;border:1px solid transparent;border-radius:1.25rem;}
+  .card:hover{border-color:rgba(14,165,233,.35);transform:translateY(-3px);}
+
+  /* ── Sensor badges ── */
+  .sensor-badge{transition:all .2s ease;cursor:default;border-radius:12px;}
+  .sensor-badge:hover{transform:translateY(-2px);box-shadow:0 4px 20px rgba(14,165,233,.2);}
+
+  /* ── Timeline ── */
+  .tl-line{position:absolute;left:19px;top:44px;bottom:8px;width:2px;background:linear-gradient(to bottom,rgba(14,165,233,.5),transparent);}
+
+  /* ── Rain animation on icon ── */
+  @keyframes rainDrop{0%,100%{transform:translateY(0);}50%{transform:translateY(5px);}}
+  .rain-drop{animation:rainDrop 1.8s ease-in-out infinite;}
+
+  /* ── Wind pulse ── */
+  @keyframes windPulse{0%,100%{opacity:.6;transform:scaleX(1);}50%{opacity:1;transform:scaleX(1.04);}}
+
+  /* ── Dot loader ── */
+  .dot{display:inline-block;}
+  .dot:nth-child(1){animation:dotB 1.4s ease-in-out infinite;}
+  .dot:nth-child(2){animation:dotB 1.4s ease-in-out .2s infinite;}
+  .dot:nth-child(3){animation:dotB 1.4s ease-in-out .4s infinite;}
+  @keyframes dotB{0%,80%,100%{transform:scale(.6);opacity:.4;}40%{transform:scale(1);opacity:1;}}
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar{width:5px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:rgba(14,165,233,.4);border-radius:3px;}
+
+  /* ── Theme pill ── */
+  .theme-pill{display:flex;align-items:center;gap:8px;background:transparent;border:1px solid rgba(14,165,233,.3);border-radius:999px;padding:5px 12px 5px 10px;cursor:pointer;transition:border-color .2s,background .2s;}
+  .theme-pill:hover{border-color:rgba(14,165,233,.7);background:rgba(14,165,233,.05);}
+  .tptrack{position:relative;width:32px;height:18px;border-radius:9px;background:#94a3b8;transition:background .3s;flex-shrink:0;}
+  html.dark .tptrack{background:#0ea5e9;}
+  .tpthumb{position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:white;transition:transform .3s;}
+  html.dark .tpthumb{transform:translateX(14px);}
+  .tplabel{font-family:'JetBrains Mono',monospace;font-size:11px;color:#0ea5e9;letter-spacing:.05em;min-width:32px;}
+
+  /* ── Lang toggle ── */
+  .lang-toggle{display:flex;align-items:center;border:1px solid rgba(14,165,233,.3);border-radius:999px;overflow:hidden;cursor:pointer;transition:border-color .2s;}
+  .lang-toggle:hover{border-color:rgba(14,165,233,.7);}
+  .lang-btn{padding:5px 12px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;letter-spacing:.05em;cursor:pointer;transition:all .2s;color:#94a3b8;background:transparent;border:none;outline:none;}
+  .lang-btn.active{color:white;background:#0ea5e9;border-radius:999px;}
+  .lang-btn:not(.active):hover{color:#0ea5e9;}
+
+  /* ── Lang switch fade ── */
+  .lang-switching [data-t]{opacity:0!important;transition:opacity .15s ease;}
+  [data-t]{transition:opacity .15s ease;}
+
+  /* ── Step num ── */
+  .sn{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;letter-spacing:.1em;}
+
+  @keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+
+  /* ── Sensor grid ── */
+  .sensor-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem;}
+  @media(min-width:640px){.sensor-grid{grid-template-columns:repeat(3,1fr);}}
+  @media(min-width:1024px){.sensor-grid{grid-template-columns:repeat(4,1fr);}}
+
+  /* ── Section divider ── */
+  .divider{height:1px;background:linear-gradient(90deg,transparent,rgba(14,165,233,.25),transparent);}
+</style>
+</head>
+
+<body class="bg-slate-50 dark:bg-[#070d14] text-slate-700 dark:text-slate-300 transition-colors duration-300">
+
+<!-- ═════════════════════════════════════════ TRANSLATIONS ═════════════════════════════════════════ -->
+<script>
+const T={
+  hr:{
+    theme_dark:"Tamno", theme_light:"Svijetlo",
+    nav_github:"GitHub",
+
+    hero_sub:"Nesl užbena Home Assistant integracija za prikaz trenutnih meteoroloških podataka iz DHMZ XML izvora — temperatura, tlak, vjetar i više, direktno u tvom dashboardu.",
+    badge_hacs:"HACS kompatibilno", badge_ha:"Home Assistant", badge_dhmz:"DHMZ", badge_os:"Open Source",
+    scroll:"Skrolaj",
+
+    s01_label:"O projektu", s01_title:"Što je VrijemeHR?",
+    c1_title:"DHMZ XML feed", c1_body:"Integracija povlači podatke iz javnog DHMZ XML feeda — trenutna mjerenja meteoroloških postaja diljem Hrvatske. Bez API ključa, bez pretplate.",
+    c2_title:"Entiteti po izboru", c2_body:"Možeš kreirati sensor entitete, weather entitet ili oboje — ovisno o tome što ti odgovara za automacije i dashboards.",
+    c3_title:"Config Flow UI", c3_body:"Konfiguracija ide isključivo kroz Home Assistant sučelje. Nema YAML editiranja — odaberi grad, tip i interval kroz standardni UI.",
+    c4_title:"Pouzdano parsiranje", c4_body:"Robustno parsiranje numeričkih vrijednosti s zaštitom od neispravnih ili praznih podataka iz feeda. Reload bez restartan HA.",
+
+    s02_label:"Instalacija", s02_title:"HACS Custom Repository", s02_sub:"Preporučeni način instalacije — kroz HACS kao custom repozitorij.",
+    step1_title:"Otvori HACS", step1_body:"U Home Assistantu idi na",
+    step2_title:"Custom repozitoriji", step2_body:"Klikni na",
+    step3_title:"Dodaj repozitorij", step3_body:"URL repozitorija i kategorija",
+    step4_title:"Instaliraj", step4_body:"Pronađi", step4_body2:"u HACS i klikni Install",
+    step5_title:"Restart & Konfiguracija", step5_body:"Restartaj HA → idi na", step5_body2:"→ Vrijeme HR",
+    manual_label:"Ručna instalacija", manual_1:"Kopiraj mapu", manual_1b:"u HA config direktorij",
+    manual_2:"Restartaj Home Assistant", manual_3:"Dodaj integraciju kroz Settings",
+    target_path:"Target path", domain_label:"Integration domain", entity_prefix:"Entity prefix",
+
+    s03_label:"Konfiguracija", s03_title:"Postavljanje integracije",
+    cfg_p1:"Nakon instalacije i restarta, integracija se postavlja isključivo kroz Home Assistant UI. Nema ručnog editiranja YAML datoteka.",
+    cfg_p2:"Možeš odabrati koji tip entiteta želiš kreirati za odabrani grad, interval osvježavanja te po potrebi dodati više gradova s različitim postavkama.",
+    cfg_p3:"Reload opcija dostupna je bez potrebe za restartom — promjene postavki se primjenjuju odmah.",
+    cfg_type:"Tip entiteta", cfg_city:"Grad (iz DHMZ popisa)", cfg_interval:"Interval osvježavanja", cfg_opts:"sensor / weather / both",
+    cfg_note:"Napomena",
+    cfg_note_body:"Integracija pruža trenutne uvjete (observation), ne višednevnu prognozu.",
+    author_label:"Autor", tech_label:"Tehnologije", source_label:"Izvor podataka", source_name:"Državni hidrometeorološki zavod",
+    origin_p1:"VrijemeHR je nastao kao odgovor na nedostatak jednostavne, nesl užbene integracije za DHMZ podatke u Home Assistantu. Hrvatska ima javno dostupan XML feed s meteorološkim mjerenjima — samo ga je trebalo ispravno iskoristiti.",
+    origin_p2:"Integracija ne zahtijeva API ključeve ni registraciju — koristi isključivo javne DHMZ XML feedove koji su slobodno dostupni.",
+    origin_p3:"Rezultat je lagana integracija koja donosi pravu meteorološku vrijednost direktno iz service-a koji ga i proizvodi: DHMZ-a.",
+
+    s04_label:"Senzori", s04_title:"Dostupni senzori", s04_sub:"Svi senzori dostupni odmah nakon konfiguracije za odabrani grad.",
+    se1:"Temperatura (°C)", se2:"Vlaga (%)", se3:"Tlak (hPa)", se4:"Tendencija tlaka",
+    se5:"Brzina vjetra (km/h)", se6:"Smjer vjetra", se7:"Opis stanja", se8:"Geografska širina",
+    se9:"Geografska dužina",
+    weather_label:"Weather entitet", weather_body:"Ako odabereš tip weather ili both, kreira se i standardni HA weather entitet koji prikazuje stanje, temperaturu i vjetar.",
+
+    s05_label:"Pouzdanost", s05_title:"Ključne značajke",
+    f1_title:"Robustno parsiranje", f1_body:"Zaštita od neispravnih i praznih numeričkih vrijednosti iz DHMZ feeda.",
+    f2_title:"Zaštita od duplikata", f2_body:"Sprječavanje dupliciranja unosa istog grada u konfiguraciji.",
+    f3_title:"Reload bez restar ta", f3_body:"Promjene postavki se primjenjuju reload opcijom, bez potrebe za punim restartom HA.",
+    f4_title:"Podesiv interval", f4_body:"Interval osvježavanja je slobodno podesiv za svaki grad zasebno.",
+    f5_title:"HACS update flow", f5_body:"Standardni HACS update flow: release tag + nova verzija u manifest.json.",
+    f6_title:"Bez API ključa", f6_body:"Koristi isključivo javne DHMZ XML feedove. Nema registracije ni pretplate.",
+
+    s06_label:"Dokumentacija", s06_title:"Resursi i podrška",
+    d1_title:"GitHub repozitorij", d2_title:"Prijavi bug", d3_title:"DHMZ XML feed", d4_title:"Releases",
+    cta:"Pogledaj na GitHubu",
+    footer_sub:"Home Assistant Integration", footer_hacs:"HACS Custom Integration", footer_os:"Open Source",
+    footer_unofficial:"Nesl užbeni projekt — nije DHMZ proizvod",
+  },
+  en:{
+    theme_dark:"Dark", theme_light:"Light",
+    nav_github:"GitHub",
+
+    hero_sub:"An unofficial Home Assistant integration that displays current meteorological data from the DHMZ XML feed — temperature, pressure, wind and more, directly in your dashboard.",
+    badge_hacs:"HACS Compatible", badge_ha:"Home Assistant", badge_dhmz:"DHMZ", badge_os:"Open Source",
+    scroll:"Scroll",
+
+    s01_label:"About", s01_title:"What is VrijemeHR?",
+    c1_title:"DHMZ XML Feed", c1_body:"The integration pulls data from the public DHMZ XML feed — current measurements from meteorological stations across Croatia. No API key, no subscription.",
+    c2_title:"Flexible Entities", c2_body:"You can create sensor entities, a weather entity or both — depending on what works best for your automations and dashboards.",
+    c3_title:"Config Flow UI", c3_body:"Configuration is done entirely through the Home Assistant UI. No YAML editing — choose city, type and interval through the standard interface.",
+    c4_title:"Reliable Parsing", c4_body:"Robust parsing of numeric values with protection against invalid or empty data from the feed. Reload without restarting HA.",
+
+    s02_label:"Installation", s02_title:"HACS Custom Repository", s02_sub:"The recommended installation method — via HACS as a custom repository.",
+    step1_title:"Open HACS", step1_body:"In Home Assistant navigate to",
+    step2_title:"Custom Repositories", step2_body:"Click",
+    step3_title:"Add Repository", step3_body:"Enter the repository URL and set category to",
+    step4_title:"Install", step4_body:"Find", step4_body2:"in HACS and click Install",
+    step5_title:"Restart & Configure", step5_body:"Restart HA → navigate to", step5_body2:"→ Vrijeme HR",
+    manual_label:"Manual Installation", manual_1:"Copy the folder", manual_1b:"to your HA config directory",
+    manual_2:"Restart Home Assistant", manual_3:"Add integration via Settings",
+    target_path:"Target path", domain_label:"Integration domain", entity_prefix:"Entity prefix",
+
+    s03_label:"Configuration", s03_title:"Setting up the integration",
+    cfg_p1:"After installation and restart, the integration is configured entirely through the Home Assistant UI. No manual YAML editing required.",
+    cfg_p2:"You can choose which entity type to create for the selected city, set the refresh interval, and add multiple cities with different settings.",
+    cfg_p3:"A reload option is available without a full restart — setting changes apply immediately.",
+    cfg_type:"Entity type", cfg_city:"City (from DHMZ list)", cfg_interval:"Refresh interval", cfg_opts:"sensor / weather / both",
+    cfg_note:"Note",
+    cfg_note_body:"The integration provides current conditions (observation), not a multi-day forecast.",
+    author_label:"Author", tech_label:"Technologies", source_label:"Data source", source_name:"Croatian Meteorological and Hydrological Service",
+    origin_p1:"VrijemeHR was created to fill the gap of a simple, unofficial DHMZ data integration for Home Assistant. Croatia has a publicly available XML feed with meteorological measurements — it just needed to be properly utilized.",
+    origin_p2:"The integration requires no API keys or registration — it uses only the publicly available DHMZ XML feeds.",
+    origin_p3:"The result is a lightweight integration that brings real meteorological value directly from the service that produces it: DHMZ.",
+
+    s04_label:"Sensors", s04_title:"Available sensors", s04_sub:"All sensors available immediately after configuring for a selected city.",
+    se1:"Temperature (°C)", se2:"Humidity (%)", se3:"Pressure (hPa)", se4:"Pressure tendency",
+    se5:"Wind speed (km/h)", se6:"Wind direction", se7:"Condition description", se8:"Latitude",
+    se9:"Longitude",
+    weather_label:"Weather entity", weather_body:"If you select weather or both as entity type, a standard HA weather entity is also created showing condition, temperature and wind.",
+
+    s05_label:"Reliability", s05_title:"Key features",
+    f1_title:"Robust parsing", f1_body:"Protection against invalid and empty numeric values from the DHMZ feed.",
+    f2_title:"Duplicate prevention", f2_body:"Prevents duplicate entries for the same city in the configuration.",
+    f3_title:"Reload without restart", f3_body:"Setting changes apply via reload option, without a full HA restart.",
+    f4_title:"Adjustable interval", f4_body:"Refresh interval is freely adjustable for each city independently.",
+    f5_title:"HACS update flow", f5_body:"Standard HACS update flow: release tag + new version in manifest.json.",
+    f6_title:"No API key", f6_body:"Uses only public DHMZ XML feeds. No registration or subscription required.",
+
+    s06_label:"Documentation", s06_title:"Resources & Support",
+    d1_title:"GitHub Repository", d2_title:"Report a bug", d3_title:"DHMZ XML feed", d4_title:"Releases",
+    cta:"View on GitHub",
+    footer_sub:"Home Assistant Integration", footer_hacs:"HACS Custom Integration", footer_os:"Open Source",
+    footer_unofficial:"Unofficial project — not a DHMZ product",
+  }
+};
+</script>
+
+<!-- ═════ NAV ═════ -->
+<nav class="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-10 py-4
+  border-b border-slate-200/50 dark:border-white/[0.05]
+  bg-slate-50/80 dark:bg-[#070d14]/80 backdrop-blur-md">
+
+  <div class="flex items-center gap-2.5">
+    <span class="text-xl rain-drop">🌤️</span>
+    <span class="font-mono text-sm text-slate-400 dark:text-slate-500 tracking-widest uppercase">Vrijeme HR</span>
+  </div>
+
+  <div class="flex items-center gap-3">
+    <div class="lang-toggle" title="Switch language">
+      <button class="lang-btn" id="btnHr" onclick="setLang('hr')">HR</button>
+      <button class="lang-btn" id="btnEn" onclick="setLang('en')">EN</button>
+    </div>
+    <button class="theme-pill" id="themeToggle">
+      <div class="tptrack"><div class="tpthumb"></div></div>
+      <span class="tplabel" id="themeLabel"></span>
+    </button>
+    <a href="https://github.com/BrunoAFK/vrijeme_hr" target="_blank"
+       class="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full border border-sky-500/30 hover:border-sky-500/70 hover:bg-sky-500/5 transition-all text-sm font-mono text-sky-600 dark:text-sky-400">
+      <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+      <span data-t="nav_github">GitHub</span>
+    </a>
+  </div>
+</nav>
+
+<!-- ═════ HERO ═════ -->
+<section class="relative min-h-screen flex flex-col items-center justify-center overflow-hidden px-6 pt-20">
+
+  <!-- Animated weather bg -->
+  <div class="weather-bg" aria-hidden="true">
+    <span style="left:8%;top:20%;animation-delay:0s;animation-duration:7s;">⛅</span>
+    <span style="left:85%;top:15%;animation-delay:1.5s;animation-duration:9s;">🌤️</span>
+    <span style="left:20%;top:65%;animation-delay:3s;animation-duration:8s;">🌧️</span>
+    <span style="left:70%;top:55%;animation-delay:.5s;animation-duration:11s;">💨</span>
+    <span style="left:50%;top:80%;animation-delay:2s;animation-duration:6s;">🌡️</span>
+    <span style="left:35%;top:30%;animation-delay:4s;animation-duration:10s;">☁️</span>
+    <span style="left:90%;top:70%;animation-delay:2.5s;animation-duration:8s;">🌬️</span>
+    <span style="left:5%;top:75%;animation-delay:1s;animation-duration:12s;">☀️</span>
+    <span style="left:60%;top:10%;animation-delay:3.5s;animation-duration:7s;">🌡️</span>
+  </div>
+
+  <!-- Data grid bg -->
+  <div class="absolute inset-0 data-grid opacity-40 pointer-events-none"></div>
+
+  <!-- Sky glow -->
+  <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-sky-400/8 dark:bg-sky-600/6 rounded-full blur-[140px] pointer-events-none animate-pulse-slow"></div>
+
+  <div class="relative z-10 text-center max-w-4xl mx-auto" style="animation:fadeUp .8s ease forwards;opacity:0">
+
+    <!-- Icon cluster -->
+    <div class="flex justify-center mb-10">
+      <div class="relative">
+        <div class="w-24 h-24 rounded-3xl bg-sky-500/10 dark:bg-sky-400/10 border border-sky-500/25 flex items-center justify-center">
+          <span class="rain-drop text-5xl">⛅</span>
+        </div>
+        <div class="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-sky-500 flex items-center justify-center shadow-lg shadow-sky-500/30">
+          <span class="text-white text-[9px] font-bold tracking-tight">HA</span>
+        </div>
+        <!-- small badges -->
+        <div class="absolute -bottom-2 -left-2 w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 border border-sky-500/30 flex items-center justify-center text-xs">🌡️</div>
+        <div class="absolute -bottom-2 -right-2 w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 border border-sky-500/30 flex items-center justify-center text-xs">💨</div>
+      </div>
+    </div>
+
+    <h1 class="font-display font-800 tracking-tight leading-none mb-2" style="font-size:clamp(3rem,10vw,6rem)">
+      <span class="grad">Vrijeme</span>
+      <span class="text-slate-800 dark:text-white">HR</span>
+    </h1>
+    <p class="font-mono text-sm text-sky-500 dark:text-sky-400 tracking-widest uppercase mb-6">for Home Assistant · DHMZ</p>
+
+    <p class="text-xl md:text-2xl text-slate-500 dark:text-slate-400 font-light max-w-2xl mx-auto leading-relaxed" data-t="hero_sub"></p>
+
+    <div class="flex flex-wrap items-center justify-center gap-3 mt-10">
+      <span class="flex items-center gap-2 px-5 py-2.5 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-700 dark:text-sky-300 text-sm font-mono">
+        <span class="w-2 h-2 rounded-full bg-sky-500 animate-pulse inline-block"></span>
+        <span data-t="badge_hacs"></span>
+      </span>
+      <span class="px-5 py-2.5 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-400 text-sm font-mono" data-t="badge_ha"></span>
+      <span class="px-5 py-2.5 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-400 text-sm font-mono" data-t="badge_dhmz"></span>
+      <span class="px-5 py-2.5 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-400 text-sm font-mono" data-t="badge_os"></span>
+    </div>
+
+    <!-- Live weather strip -->
+    <div class="mt-10 inline-flex items-center gap-6 px-6 py-3 rounded-2xl bg-sky-500/5 border border-sky-500/15 text-sm font-mono text-slate-500 dark:text-slate-400">
+      <span>🌡️ Zagreb · DHMZ</span>
+      <span class="text-slate-300 dark:text-slate-600">|</span>
+      <span>⛅ v1.0.1</span>
+      <span class="text-slate-300 dark:text-slate-600">|</span>
+      <span>Python · 100%</span>
+    </div>
+
+    <div class="mt-14 flex flex-col items-center gap-2 text-slate-400 dark:text-slate-600">
+      <span class="text-xs font-mono tracking-widest uppercase" data-t="scroll"></span>
+      <div class="flex gap-1">
+        <span class="dot w-1.5 h-1.5 rounded-full bg-sky-500 inline-block"></span>
+        <span class="dot w-1.5 h-1.5 rounded-full bg-sky-500 inline-block"></span>
+        <span class="dot w-1.5 h-1.5 rounded-full bg-sky-500 inline-block"></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═════ ABOUT ═════ -->
+<section class="py-28 px-6 relative horizon">
+  <div class="max-w-5xl mx-auto">
+    <div class="reveal mb-12">
+      <div class="flex items-center gap-3 mb-4">
+        <span class="sn text-sky-500 bg-sky-500/10 px-2.5 py-1 rounded-md">01</span>
+        <span class="text-sm font-mono text-slate-400 uppercase tracking-widest" data-t="s01_label"></span>
+      </div>
+      <h2 class="font-display font-700 text-slate-800 dark:text-white" style="font-size:clamp(2rem,5vw,3.25rem);line-height:1.15" data-t="s01_title"></h2>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-6">
+      <div class="reveal card p-8 bg-white dark:bg-white/[0.03] shadow-sm dark:shadow-none">
+        <div class="w-14 h-14 rounded-xl bg-sky-500/10 flex items-center justify-center mb-6 text-3xl">🌐</div>
+        <h3 class="font-display text-2xl font-600 mb-3 text-slate-800 dark:text-white" data-t="c1_title"></h3>
+        <p class="text-slate-600 dark:text-slate-400 leading-relaxed" data-t="c1_body"></p>
+      </div>
+      <div class="reveal card p-8 bg-white dark:bg-white/[0.03] shadow-sm dark:shadow-none" style="transition-delay:.1s">
+        <div class="w-14 h-14 rounded-xl bg-sky-500/10 flex items-center justify-center mb-6 text-3xl">🔀</div>
+        <h3 class="font-display text-2xl font-600 mb-3 text-slate-800 dark:text-white" data-t="c2_title"></h3>
+        <p class="text-slate-600 dark:text-slate-400 leading-relaxed" data-t="c2_body"></p>
+      </div>
+      <div class="reveal card p-8 bg-white dark:bg-white/[0.03] shadow-sm dark:shadow-none" style="transition-delay:.15s">
+        <div class="w-14 h-14 rounded-xl bg-sky-500/10 flex items-center justify-center mb-6 text-3xl">🖱️</div>
+        <h3 class="font-display text-2xl font-600 mb-3 text-slate-800 dark:text-white" data-t="c3_title"></h3>
+        <p class="text-slate-600 dark:text-slate-400 leading-relaxed" data-t="c3_body"></p>
+      </div>
+      <div class="reveal card p-8 bg-white dark:bg-white/[0.03] shadow-sm dark:shadow-none" style="transition-delay:.2s">
+        <div class="w-14 h-14 rounded-xl bg-sky-500/10 flex items-center justify-center mb-6 text-3xl">🛡️</div>
+        <h3 class="font-display text-2xl font-600 mb-3 text-slate-800 dark:text-white" data-t="c4_title"></h3>
+        <p class="text-slate-600 dark:text-slate-400 leading-relaxed" data-t="c4_body"></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═════ INSTALLATION ═════ -->
+<section class="py-28 px-6 bg-slate-100/50 dark:bg-white/[0.015]">
+  <div class="max-w-5xl mx-auto">
+    <div class="reveal mb-14">
+      <div class="flex items-center gap-3 mb-4">
+        <span class="sn text-sky-500 bg-sky-500/10 px-2.5 py-1 rounded-md">02</span>
+        <span class="text-sm font-mono text-slate-400 uppercase tracking-widest" data-t="s02_label"></span>
+      </div>
+      <h2 class="font-display font-700 text-slate-800 dark:text-white mb-3" style="font-size:clamp(2rem,5vw,3.25rem);line-height:1.15" data-t="s02_title"></h2>
+      <p class="text-lg text-slate-500 dark:text-slate-400 max-w-xl" data-t="s02_sub"></p>
+    </div>
+
+    <div class="flex flex-col lg:flex-row gap-10 items-start">
+
+      <!-- Steps -->
+      <div class="w-full lg:w-[58%] reveal">
+        <div class="relative">
+          <div class="tl-line"></div>
+
+          <div class="relative flex gap-5 pb-9">
+            <div class="flex-shrink-0 w-10 h-10 rounded-full bg-sky-500 flex items-center justify-center text-white font-mono text-base z-10 shadow-md shadow-sky-500/30">1</div>
+            <div class="pt-1 min-w-0">
+              <h4 class="font-display text-xl font-600 text-slate-800 dark:text-white mb-1.5" data-t="step1_title"></h4>
+              <p class="text-base text-slate-500 dark:text-slate-400"><span data-t="step1_body"></span> <code class="font-mono text-sm text-sky-600 dark:text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded-md whitespace-nowrap">HACS → Integrations</code></p>
+            </div>
+          </div>
+
+          <div class="relative flex gap-5 pb-9">
+            <div class="flex-shrink-0 w-10 h-10 rounded-full bg-sky-500/20 border border-sky-500/40 flex items-center justify-center text-sky-600 dark:text-sky-300 font-mono text-base z-10">2</div>
+            <div class="pt-1 min-w-0">
+              <h4 class="font-display text-xl font-600 text-slate-800 dark:text-white mb-1.5" data-t="step2_title"></h4>
+              <p class="text-base text-slate-500 dark:text-slate-400"><span data-t="step2_body"></span> <code class="font-mono text-sm text-sky-600 dark:text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded-md whitespace-nowrap">⋮ → Custom repositories</code></p>
+            </div>
+          </div>
+
+          <div class="relative flex gap-5 pb-9">
+            <div class="flex-shrink-0 w-10 h-10 rounded-full bg-sky-500/20 border border-sky-500/40 flex items-center justify-center text-sky-600 dark:text-sky-300 font-mono text-base z-10">3</div>
+            <div class="pt-1 min-w-0 w-full">
+              <h4 class="font-display text-xl font-600 text-slate-800 dark:text-white mb-1.5" data-t="step3_title"></h4>
+              <p class="text-base text-slate-500 dark:text-slate-400 mb-3"><span data-t="step3_body"></span> <code class="font-mono text-sm text-sky-600 dark:text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded-md">Integration</code></p>
+              <div class="cb px-4 py-3 flex items-center gap-3">
+                <code class="font-mono text-sm text-sky-600 dark:text-sky-400 break-all flex-1">https://github.com/BrunoAFK/vrijeme_hr</code>
+                <button onclick="copyUrl(this,'https://github.com/BrunoAFK/vrijeme_hr')" class="flex-shrink-0 text-slate-400 hover:text-sky-500 transition-colors p-1" title="Copy">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="relative flex gap-5 pb-9">
+            <div class="flex-shrink-0 w-10 h-10 rounded-full bg-sky-500/20 border border-sky-500/40 flex items-center justify-center text-sky-600 dark:text-sky-300 font-mono text-base z-10">4</div>
+            <div class="pt-1 min-w-0">
+              <h4 class="font-display text-xl font-600 text-slate-800 dark:text-white mb-1.5" data-t="step4_title"></h4>
+              <p class="text-base text-slate-500 dark:text-slate-400"><span data-t="step4_body"></span> <strong class="text-slate-700 dark:text-slate-300 font-600">Vrijeme HR</strong> <span data-t="step4_body2"></span></p>
+            </div>
+          </div>
+
+          <div class="relative flex gap-5">
+            <div class="flex-shrink-0 w-10 h-10 rounded-full bg-sky-500/20 border border-sky-500/40 flex items-center justify-center text-sky-600 dark:text-sky-300 font-mono text-base z-10">5</div>
+            <div class="pt-1 min-w-0">
+              <h4 class="font-display text-xl font-600 text-slate-800 dark:text-white mb-1.5" data-t="step5_title"></h4>
+              <p class="text-base text-slate-500 dark:text-slate-400"><span data-t="step5_body"></span> <code class="font-mono text-sm text-sky-600 dark:text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded-md">Settings → Devices &amp; Services → Add Integration</code> <span data-t="step5_body2"></span></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Manual + Domain -->
+      <div class="w-full lg:w-[40%] space-y-5 reveal" style="transition-delay:.15s">
+        <div class="rounded-2xl border border-slate-200 dark:border-white/10 p-7 bg-white dark:bg-white/[0.03]">
+          <div class="flex items-center gap-2.5 mb-5">
+            <svg class="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
+            <span class="text-sm font-mono text-slate-500 uppercase tracking-wider" data-t="manual_label"></span>
+          </div>
+          <ol class="space-y-3">
+            <li class="flex gap-3 text-base text-slate-600 dark:text-slate-400">
+              <span class="text-sky-500 font-mono font-500 flex-shrink-0">1.</span>
+              <span><span data-t="manual_1"></span> <code class="font-mono text-sm text-sky-600 dark:text-sky-400 bg-sky-500/10 px-1.5 py-0.5 rounded-md break-all">custom_components/vrijeme_hr</code> <span data-t="manual_1b"></span></span>
+            </li>
+            <li class="flex gap-3 text-base text-slate-600 dark:text-slate-400">
+              <span class="text-sky-500 font-mono font-500 flex-shrink-0">2.</span><span data-t="manual_2"></span>
+            </li>
+            <li class="flex gap-3 text-base text-slate-600 dark:text-slate-400">
+              <span class="text-sky-500 font-mono font-500 flex-shrink-0">3.</span><span data-t="manual_3"></span>
+            </li>
+          </ol>
+          <div class="mt-6 pt-5 border-t border-slate-100 dark:border-white/5">
+            <p class="text-xs font-mono text-slate-400 mb-2 uppercase tracking-wider" data-t="target_path"></p>
+            <div class="cb px-4 py-3"><code class="font-mono text-sm text-sky-600 dark:text-sky-400 break-all">&lt;HA_CONFIG&gt;/custom_components/vrijeme_hr</code></div>
+          </div>
+        </div>
+
+        <div class="rounded-xl border border-sky-500/25 bg-sky-500/[0.04] dark:bg-sky-500/[0.06] p-6">
+          <p class="text-xs font-mono text-sky-500 uppercase tracking-wider mb-2.5" data-t="domain_label"></p>
+          <p class="font-mono text-xl font-500 text-sky-700 dark:text-sky-300">vrijeme_hr</p>
+          <p class="text-sm font-mono text-sky-600/60 dark:text-sky-400/60 mt-2"><span data-t="entity_prefix"></span>: <span class="text-sky-600 dark:text-sky-400">weather.* / sensor.*</span></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═════ ORIGIN + CONFIG ═════ -->
+<section class="py-28 px-6">
+  <div class="max-w-5xl mx-auto">
+    <div class="reveal mb-12">
+      <div class="flex items-center gap-3 mb-4">
+        <span class="sn text-sky-500 bg-sky-500/10 px-2.5 py-1 rounded-md">03</span>
+        <span class="text-sm font-mono text-slate-400 uppercase tracking-widest" data-t="s03_label"></span>
+      </div>
+      <h2 class="font-display font-700 text-slate-800 dark:text-white" style="font-size:clamp(2rem,5vw,3.25rem);line-height:1.15" data-t="s03_title"></h2>
+    </div>
+
+    <div class="grid lg:grid-cols-3 gap-7">
+
+      <!-- Config description -->
+      <div class="lg:col-span-2 reveal">
+        <div class="rounded-2xl p-8 bg-white dark:bg-white/[0.03] border border-slate-200/60 dark:border-white/5 h-full space-y-5 mb-6">
+          <p class="text-lg text-slate-600 dark:text-slate-400 leading-relaxed" data-t="cfg_p1"></p>
+          <p class="text-lg text-slate-600 dark:text-slate-400 leading-relaxed" data-t="cfg_p2"></p>
+          <p class="text-lg text-slate-600 dark:text-slate-400 leading-relaxed" data-t="cfg_p3"></p>
+        </div>
+
+        <!-- Config fields visual -->
+        <div class="rounded-2xl border border-sky-500/20 bg-sky-500/[0.03] dark:bg-sky-500/[0.05] p-7">
+          <p class="text-sm font-mono text-sky-500 uppercase tracking-wider mb-6">Config flow</p>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+            <div>
+              <p class="text-xs text-slate-400 font-mono mb-2 uppercase tracking-wide" data-t="cfg_type"></p>
+              <code class="font-mono text-base text-sky-600 dark:text-sky-400" data-t="cfg_opts"></code>
+            </div>
+            <div>
+              <p class="text-xs text-slate-400 font-mono mb-2 uppercase tracking-wide" data-t="cfg_city"></p>
+              <code class="font-mono text-base text-sky-600 dark:text-sky-400">Zagreb, Split, Rijeka…</code>
+            </div>
+            <div>
+              <p class="text-xs text-slate-400 font-mono mb-2 uppercase tracking-wide" data-t="cfg_interval"></p>
+              <code class="font-mono text-base text-sky-600 dark:text-sky-400">300s – 3600s</code>
+            </div>
+          </div>
+
+          <!-- Note -->
+          <div class="mt-6 pt-5 border-t border-sky-500/15 flex gap-3">
+            <span class="text-sky-400 text-lg flex-shrink-0">ℹ️</span>
+            <p class="text-sm text-slate-500 dark:text-slate-400"><strong class="text-slate-700 dark:text-slate-300 font-600" data-t="cfg_note"></strong>: <span data-t="cfg_note_body"></span></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Author + Source -->
+      <div class="space-y-5 reveal" style="transition-delay:.1s">
+        <div class="rounded-2xl p-6 bg-white dark:bg-white/[0.03] border border-slate-200/60 dark:border-white/5">
+          <p class="text-xs font-mono text-slate-400 uppercase tracking-wider mb-4" data-t="author_label"></p>
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-full bg-sky-500/15 flex items-center justify-center text-sky-600 dark:text-sky-400 font-display font-700 text-xl flex-shrink-0">B</div>
+            <div>
+              <p class="font-display font-600 text-lg text-slate-800 dark:text-white">BrunoAFK</p>
+              <a href="https://github.com/BrunoAFK" target="_blank" class="text-sm font-mono text-sky-500 hover:text-sky-600 transition-colors">@BrunoAFK on GitHub</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="rounded-2xl p-6 bg-white dark:bg-white/[0.03] border border-slate-200/60 dark:border-white/5">
+          <p class="text-xs font-mono text-slate-400 uppercase tracking-wider mb-4" data-t="tech_label"></p>
+          <div class="flex flex-wrap gap-2">
+            <span class="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-white/5 text-sm font-mono text-slate-600 dark:text-slate-400">Python</span>
+            <span class="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-white/5 text-sm font-mono text-slate-600 dark:text-slate-400">XML</span>
+            <span class="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-white/5 text-sm font-mono text-slate-600 dark:text-slate-400">Home Assistant</span>
+            <span class="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-white/5 text-sm font-mono text-slate-600 dark:text-slate-400">HACS</span>
+          </div>
+        </div>
+
+        <div class="rounded-2xl p-6 bg-white dark:bg-white/[0.03] border border-slate-200/60 dark:border-white/5">
+          <p class="text-xs font-mono text-slate-400 uppercase tracking-wider mb-4" data-t="source_label"></p>
+          <div class="flex items-start gap-3">
+            <span class="text-3xl mt-0.5">🌦️</span>
+            <div>
+              <p class="font-display font-600 text-base text-slate-800 dark:text-white">DHMZ</p>
+              <p class="text-sm text-slate-500 dark:text-slate-400" data-t="source_name"></p>
+              <a href="https://meteo.hr" target="_blank" class="text-xs font-mono text-sky-500 hover:underline mt-1 inline-block">meteo.hr →</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Origin summary -->
+        <div class="rounded-2xl p-6 bg-white dark:bg-white/[0.03] border border-slate-200/60 dark:border-white/5">
+          <p class="text-xs font-mono text-slate-400 uppercase tracking-wider mb-4">Origin</p>
+          <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed" data-t="origin_p1"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═════ SENSORS ═════ -->
+<section class="py-28 px-6 bg-slate-100/50 dark:bg-white/[0.015]">
+  <div class="max-w-5xl mx-auto">
+    <div class="reveal mb-14">
+      <div class="flex items-center gap-3 mb-4">
+        <span class="sn text-sky-500 bg-sky-500/10 px-2.5 py-1 rounded-md">04</span>
+        <span class="text-sm font-mono text-slate-400 uppercase tracking-widest" data-t="s04_label"></span>
+      </div>
+      <h2 class="font-display font-700 text-slate-800 dark:text-white mb-3" style="font-size:clamp(2rem,5vw,3.25rem);line-height:1.15" data-t="s04_title"></h2>
+      <p class="text-lg text-slate-500 dark:text-slate-400 max-w-xl" data-t="s04_sub"></p>
+    </div>
+
+    <!-- Sensor grid with icons -->
+    <div class="sensor-grid reveal mb-8">
+      <div class="sensor-badge cb p-5 flex items-start gap-3">
+        <span class="text-2xl flex-shrink-0">🌡️</span>
+        <div><div class="font-mono text-xs text-slate-400 mb-1">sensor</div><div class="font-mono text-sm font-500 text-sky-600 dark:text-sky-400 mb-1">temperature</div><div class="text-sm text-slate-500 dark:text-slate-400" data-t="se1"></div></div>
+      </div>
+      <div class="sensor-badge cb p-5 flex items-start gap-3">
+        <span class="text-2xl flex-shrink-0">💧</span>
+        <div><div class="font-mono text-xs text-slate-400 mb-1">sensor</div><div class="font-mono text-sm font-500 text-sky-600 dark:text-sky-400 mb-1">humidity</div><div class="text-sm text-slate-500 dark:text-slate-400" data-t="se2"></div></div>
+      </div>
+      <div class="sensor-badge cb p-5 flex items-start gap-3">
+        <span class="text-2xl flex-shrink-0">🔵</span>
+        <div><div class="font-mono text-xs text-slate-400 mb-1">sensor</div><div class="font-mono text-sm font-500 text-sky-600 dark:text-sky-400 mb-1">pressure</div><div class="text-sm text-slate-500 dark:text-slate-400" data-t="se3"></div></div>
+      </div>
+      <div class="sensor-badge cb p-5 flex items-start gap-3">
+        <span class="text-2xl flex-shrink-0">📈</span>
+        <div><div class="font-mono text-xs text-slate-400 mb-1">sensor</div><div class="font-mono text-sm font-500 text-sky-600 dark:text-sky-400 mb-1">pressure_tendency</div><div class="text-sm text-slate-500 dark:text-slate-400" data-t="se4"></div></div>
+      </div>
+      <div class="sensor-badge cb p-5 flex items-start gap-3">
+        <span class="text-2xl flex-shrink-0">💨</span>
+        <div><div class="font-mono text-xs text-slate-400 mb-1">sensor</div><div class="font-mono text-sm font-500 text-sky-600 dark:text-sky-400 mb-1">wind_speed</div><div class="text-sm text-slate-500 dark:text-slate-400" data-t="se5"></div></div>
+      </div>
+      <div class="sensor-badge cb p-5 flex items-start gap-3">
+        <span class="text-2xl flex-shrink-0">🧭</span>
+        <div><div class="font-mono text-xs text-slate-400 mb-1">sensor</div><div class="font-mono text-sm font-500 text-sky-600 dark:text-sky-400 mb-1">wind_direction</div><div class="text-sm text-slate-500 dark:text-slate-400" data-t="se6"></div></div>
+      </div>
+      <div class="sensor-badge cb p-5 flex items-start gap-3">
+        <span class="text-2xl flex-shrink-0">⛅</span>
+        <div><div class="font-mono text-xs text-slate-400 mb-1">sensor</div><div class="font-mono text-sm font-500 text-sky-600 dark:text-sky-400 mb-1">condition</div><div class="text-sm text-slate-500 dark:text-slate-400" data-t="se7"></div></div>
+      </div>
+      <div class="sensor-badge cb p-5 flex items-start gap-3">
+        <span class="text-2xl flex-shrink-0">📍</span>
+        <div><div class="font-mono text-xs text-slate-400 mb-1">sensor</div><div class="font-mono text-sm font-500 text-sky-600 dark:text-sky-400 mb-1">lat / lon</div><div class="text-sm text-slate-500 dark:text-slate-400"><span data-t="se8"></span> / <span data-t="se9"></span></div></div>
+      </div>
+    </div>
+
+    <!-- Weather entity callout -->
+    <div class="reveal rounded-2xl border border-sky-500/20 bg-sky-500/[0.03] dark:bg-sky-500/[0.05] p-7 flex gap-5 items-start">
+      <div class="w-12 h-12 rounded-xl bg-sky-500/15 flex items-center justify-center text-2xl flex-shrink-0">🌤️</div>
+      <div>
+        <h4 class="font-display text-xl font-600 text-slate-800 dark:text-white mb-2" data-t="weather_label"></h4>
+        <p class="text-base text-slate-600 dark:text-slate-400" data-t="weather_body"></p>
+        <div class="mt-3 cb inline-block px-4 py-2">
+          <code class="font-mono text-sm text-sky-600 dark:text-sky-400">weather.vrijeme_hr_&lt;city&gt;</code>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═════ FEATURES ═════ -->
+<section class="py-28 px-6">
+  <div class="max-w-5xl mx-auto">
+    <div class="reveal mb-12">
+      <div class="flex items-center gap-3 mb-4">
+        <span class="sn text-sky-500 bg-sky-500/10 px-2.5 py-1 rounded-md">05</span>
+        <span class="text-sm font-mono text-slate-400 uppercase tracking-widest" data-t="s05_label"></span>
+      </div>
+      <h2 class="font-display font-700 text-slate-800 dark:text-white" style="font-size:clamp(2rem,5vw,3.25rem);line-height:1.15" data-t="s05_title"></h2>
+    </div>
+
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 reveal">
+      <div class="card p-6 bg-white dark:bg-white/[0.03] shadow-sm dark:shadow-none"><div class="text-2xl mb-4">🔩</div><h4 class="font-display text-lg font-600 text-slate-800 dark:text-white mb-2" data-t="f1_title"></h4><p class="text-base text-slate-500 dark:text-slate-400 leading-relaxed" data-t="f1_body"></p></div>
+      <div class="card p-6 bg-white dark:bg-white/[0.03] shadow-sm dark:shadow-none"><div class="text-2xl mb-4">🚫</div><h4 class="font-display text-lg font-600 text-slate-800 dark:text-white mb-2" data-t="f2_title"></h4><p class="text-base text-slate-500 dark:text-slate-400 leading-relaxed" data-t="f2_body"></p></div>
+      <div class="card p-6 bg-white dark:bg-white/[0.03] shadow-sm dark:shadow-none"><div class="text-2xl mb-4">🔄</div><h4 class="font-display text-lg font-600 text-slate-800 dark:text-white mb-2" data-t="f3_title"></h4><p class="text-base text-slate-500 dark:text-slate-400 leading-relaxed" data-t="f3_body"></p></div>
+      <div class="card p-6 bg-white dark:bg-white/[0.03] shadow-sm dark:shadow-none"><div class="text-2xl mb-4">⏱️</div><h4 class="font-display text-lg font-600 text-slate-800 dark:text-white mb-2" data-t="f4_title"></h4><p class="text-base text-slate-500 dark:text-slate-400 leading-relaxed" data-t="f4_body"></p></div>
+      <div class="card p-6 bg-white dark:bg-white/[0.03] shadow-sm dark:shadow-none"><div class="text-2xl mb-4">📦</div><h4 class="font-display text-lg font-600 text-slate-800 dark:text-white mb-2" data-t="f5_title"></h4><p class="text-base text-slate-500 dark:text-slate-400 leading-relaxed" data-t="f5_body"></p></div>
+      <div class="card p-6 bg-white dark:bg-white/[0.03] shadow-sm dark:shadow-none"><div class="text-2xl mb-4">🔓</div><h4 class="font-display text-lg font-600 text-slate-800 dark:text-white mb-2" data-t="f6_title"></h4><p class="text-base text-slate-500 dark:text-slate-400 leading-relaxed" data-t="f6_body"></p></div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═════ DOCS + CTA ═════ -->
+<section class="py-28 px-6 bg-slate-100/50 dark:bg-white/[0.015]">
+  <div class="max-w-5xl mx-auto">
+    <div class="reveal mb-12">
+      <div class="flex items-center gap-3 mb-4">
+        <span class="sn text-sky-500 bg-sky-500/10 px-2.5 py-1 rounded-md">06</span>
+        <span class="text-sm font-mono text-slate-400 uppercase tracking-widest" data-t="s06_label"></span>
+      </div>
+      <h2 class="font-display font-700 text-slate-800 dark:text-white" style="font-size:clamp(2rem,5vw,3.25rem);line-height:1.15" data-t="s06_title"></h2>
+    </div>
+
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 reveal">
+      <a href="https://github.com/BrunoAFK/vrijeme_hr" target="_blank" class="card block p-6 bg-white dark:bg-white/[0.03] shadow-sm dark:shadow-none group">
+        <div class="text-2xl mb-4">📁</div>
+        <h4 class="font-display font-600 text-base text-slate-800 dark:text-white mb-2 group-hover:text-sky-500 transition-colors" data-t="d1_title"></h4>
+        <p class="text-sm text-slate-400 font-mono">BrunoAFK/vrijeme_hr</p>
+      </a>
+      <a href="https://github.com/BrunoAFK/vrijeme_hr/issues" target="_blank" class="card block p-6 bg-white dark:bg-white/[0.03] shadow-sm dark:shadow-none group">
+        <div class="text-2xl mb-4">🐛</div>
+        <h4 class="font-display font-600 text-base text-slate-800 dark:text-white mb-2 group-hover:text-sky-500 transition-colors" data-t="d2_title"></h4>
+        <p class="text-sm text-slate-400 font-mono">GitHub Issues</p>
+      </a>
+      <a href="https://meteo.hr" target="_blank" class="card block p-6 bg-white dark:bg-white/[0.03] shadow-sm dark:shadow-none group">
+        <div class="text-2xl mb-4">🌦️</div>
+        <h4 class="font-display font-600 text-base text-slate-800 dark:text-white mb-2 group-hover:text-sky-500 transition-colors" data-t="d3_title"></h4>
+        <p class="text-sm text-slate-400 font-mono">meteo.hr</p>
+      </a>
+      <a href="https://github.com/BrunoAFK/vrijeme_hr/releases" target="_blank" class="card block p-6 bg-white dark:bg-white/[0.03] shadow-sm dark:shadow-none group">
+        <div class="text-2xl mb-4">🏷️</div>
+        <h4 class="font-display font-600 text-base text-slate-800 dark:text-white mb-2 group-hover:text-sky-500 transition-colors" data-t="d4_title"></h4>
+        <p class="text-sm text-slate-400 font-mono">v1.0.1 · Latest</p>
+      </a>
+    </div>
+
+    <div class="reveal mt-16 text-center">
+      <div class="inline-block relative">
+        <div class="absolute inset-0 bg-sky-500/15 blur-2xl rounded-full scale-150 pointer-events-none"></div>
+        <a href="https://github.com/BrunoAFK/vrijeme_hr" target="_blank"
+           class="relative inline-flex items-center gap-3 px-9 py-5 bg-sky-500 hover:bg-sky-600 text-white font-display font-600 text-lg rounded-2xl transition-all hover:scale-[1.02] shadow-lg shadow-sky-500/20">
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+          <span data-t="cta"></span>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═════ FOOTER ═════ -->
+<footer class="py-10 px-6 border-t border-slate-200/60 dark:border-white/5">
+  <div class="max-w-5xl mx-auto">
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
+      <div class="flex items-center gap-3">
+        <span class="rain-drop text-2xl">⛅</span>
+        <div>
+          <p class="font-display font-600 text-base text-slate-700 dark:text-slate-300">VrijemeHR</p>
+          <p class="text-sm font-mono text-slate-400" data-t="footer_sub"></p>
+        </div>
+      </div>
+      <div class="flex flex-wrap items-center justify-center gap-4 text-sm font-mono text-slate-400">
+        <span data-t="footer_hacs"></span>
+        <span>•</span>
+        <span data-t="footer_os"></span>
+        <span>•</span>
+        <a href="https://github.com/BrunoAFK/vrijeme_hr" target="_blank" class="hover:text-sky-500 transition-colors">BrunoAFK/vrijeme_hr</a>
+      </div>
+    </div>
+    <p class="text-center text-xs font-mono text-slate-400/60" data-t="footer_unofficial"></p>
+  </div>
+</footer>
+
+<!-- ═════ SCRIPTS ═════ -->
+<script>
+// Cookie helpers
+function getCookie(n){var m=document.cookie.match(new RegExp('(?:^|; )'+n+'=([^;]*)'));return m?m[1]:null;}
+function setCookie(n,v,d){var x=new Date();x.setTime(x.getTime()+d*864e5);document.cookie=n+'='+v+';expires='+x.toUTCString()+';path=/';}
+
+// Theme
+var themeLabel=document.getElementById('themeLabel');
+function updateThemeLabel(){
+  var lang=window.__lang||'hr';
+  themeLabel.textContent=document.documentElement.classList.contains('dark')?T[lang].theme_dark:T[lang].theme_light;
+}
+document.getElementById('themeToggle').addEventListener('click',function(){
+  var isDark=document.documentElement.classList.toggle('dark');
+  setCookie('theme',isDark?'dark':'light',365);
+  updateThemeLabel();
+});
+
+// Language
+var btnHr=document.getElementById('btnHr');
+var btnEn=document.getElementById('btnEn');
+function applyLang(lang,save){
+  window.__lang=lang;
+  document.documentElement.setAttribute('data-lang',lang);
+  document.documentElement.lang=lang;
+  if(save)setCookie('lang',lang,365);
+  btnHr.classList.toggle('active',lang==='hr');
+  btnEn.classList.toggle('active',lang==='en');
+  document.body.classList.add('lang-switching');
+  setTimeout(function(){
+    document.querySelectorAll('[data-t]').forEach(function(el){
+      var k=el.getAttribute('data-t');
+      if(T[lang][k]!==undefined)el.textContent=T[lang][k];
+    });
+    updateThemeLabel();
+    document.body.classList.remove('lang-switching');
+  },150);
+}
+function setLang(lang){applyLang(lang,true);}
+applyLang(window.__lang||'hr',false);
+
+// Scroll reveal
+var observer=new IntersectionObserver(function(entries){
+  entries.forEach(function(e){
+    if(e.isIntersecting){setTimeout(function(){e.target.classList.add('visible');},60);observer.unobserve(e.target);}
+  });
+},{threshold:.08,rootMargin:'0px 0px -40px 0px'});
+document.querySelectorAll('.reveal').forEach(function(el){observer.observe(el);});
+
+// Copy
+function copyUrl(btn,url){
+  navigator.clipboard.writeText(url).then(function(){
+    var orig=btn.innerHTML;
+    btn.innerHTML='<svg class="w-4 h-4 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>';
+    setTimeout(function(){btn.innerHTML=orig;},1800);
+  });
+}
+</script>
+
+</body>
+</html>
