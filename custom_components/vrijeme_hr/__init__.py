@@ -3,20 +3,27 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DOMAIN, CONF_INTEGRATION_TYPE
+from .const import DOMAIN, CONF_INTEGRATION_TYPE, DEFAULT_UPDATE_INTERVAL
 from .coordinator import VrijemeDataUpdateCoordinator
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Vrijeme.hr from a config entry."""
-    integration_type = entry.data.get(CONF_INTEGRATION_TYPE, "sensor")
+    config = {**entry.data, **entry.options}
+    integration_type = config.get(CONF_INTEGRATION_TYPE, "sensor")
+    update_interval = int(
+        config.get("update_interval", entry.data.get("update_interval", DEFAULT_UPDATE_INTERVAL))
+    )
 
     coordinator = VrijemeDataUpdateCoordinator(
         hass=hass,
         city=entry.data["city"],
-        update_interval=entry.data["update_interval"]
+        update_interval=update_interval
     )
 
-    await coordinator.async_config_entry_first_refresh()
+    try:
+        await coordinator.async_config_entry_first_refresh()
+    except Exception as err:
+        raise ConfigEntryNotReady(f"Initial update failed: {err}") from err
 
     platforms = []
     if integration_type in ["sensor", "both"]:
@@ -31,6 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     }
 
     await hass.config_entries.async_forward_entry_setups(entry, platforms)
+    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
     return True
 
@@ -42,3 +50,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Reload config entry."""
+    await hass.config_entries.async_reload(entry.entry_id)

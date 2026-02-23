@@ -122,7 +122,7 @@ class VrijemeSensor(CoordinatorEntity, SensorEntity):
                 "W": 270, "WNW": 292.5, "NW": 315, "NNW": 337.5,
                 "C": None  # Handle 'C' by returning None
             }
-            converted_value = direction_map.get(value, value)
+            converted_value = direction_map.get(value, None)
             _LOGGER.debug("%s: Converted wind direction from %s to %s", 
                         self._attr_name, value, converted_value)
             return converted_value

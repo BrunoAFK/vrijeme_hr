@@ -18,7 +18,6 @@ from .const import (
     CONF_SENSOR_OPTIONS,
     DEFAULT_UPDATE_INTERVAL,
     CROATIA_URL,
-    AVAILABLE_SENSORS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,7 +26,7 @@ async def get_available_cities() -> list[str]:
     """Get list of available cities from the XML."""
     try:
         async with aiohttp.ClientSession() as session:
-            async with session.get(CROATIA_URL) as response:
+            async with session.get(CROATIA_URL, timeout=20) as response:
                 if response.status != 200:
                     _LOGGER.error("Failed to fetch data from %s: %s", CROATIA_URL, response.status)
                     return []
@@ -61,14 +60,13 @@ class VrijemeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(config_entry):
         """Get the options flow for this handler."""
-        return VrijemeOptionsFlow(config_entry)
+        return VrijemeOptionsFlow()
 
     async def async_step_user(self, user_input: Optional[Dict[str, Any]] = None) -> FlowResult:
         """Handle the initial step."""
         errors = {}
         
         # Try to detect language from environment
-        import os
         language_env = os.environ.get("LANGUAGE", "")
         lang_setting = os.environ.get("LANG", "")
         
@@ -148,8 +146,12 @@ class VrijemeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             update_interval_description = "Update interval in seconds (default: 3600)"
 
         if user_input is not None:
+            selected_city = user_input[CONF_CITY]
+            await self.async_set_unique_id(selected_city.lower())
+            self._abort_if_unique_id_configured()
+
             data = {
-                CONF_CITY: user_input[CONF_CITY],
+                CONF_CITY: selected_city,
                 CONF_INTEGRATION_TYPE: self._integration_type,
                 CONF_UPDATE_INTERVAL: user_input.get(CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL)
             }
@@ -159,7 +161,7 @@ class VrijemeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data[CONF_SENSOR_OPTIONS] = user_input.get(CONF_SENSOR_OPTIONS, [])
 
             return self.async_create_entry(
-                title=f"Vrijeme.hr {user_input[CONF_CITY]}",
+                title=f"Vrijeme.hr {selected_city}",
                 data=data
             )
 
@@ -170,7 +172,7 @@ class VrijemeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_UPDATE_INTERVAL, 
                 default=DEFAULT_UPDATE_INTERVAL, 
                 description=update_interval_description
-            ): int,
+            ): vol.All(vol.Coerce(int), vol.Range(min=60, max=86400)),
         }
         
         # Add sensor selection if integration type is "both"
@@ -185,40 +187,38 @@ class VrijemeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class VrijemeOptionsFlow(config_entries.OptionsFlow):
     """Handle Vrijeme options."""
 
-    def __init__(self, config_entry):
-        """Initialize options flow."""
-        self.config_entry = config_entry
-        self._is_croatian = None
-
     async def async_step_init(self, user_input=None):
         """Manage the options."""
         # Try to detect language using the same approach
         language_env = os.environ.get("LANGUAGE", "")
         lang_setting = os.environ.get("LANG", "")
         
-        self._is_croatian = "hr" in language_env.lower() or "hr" in lang_setting.lower()
+        is_croatian = "hr" in language_env.lower() or "hr" in lang_setting.lower()
         _LOGGER.debug("Options flow - Language detection from env: %s, %s => is_croatian = %s", 
-                      language_env, lang_setting, self._is_croatian)
+                      language_env, lang_setting, is_croatian)
         
         # Get appropriate description based on language
         update_interval_description = (
             "Učestalost ažuriranja u sekundama" 
-            if self._is_croatian 
+            if is_croatian 
             else "Update interval in seconds"
         )
 
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
+        current_update_interval = self.config_entry.options.get(
+            CONF_UPDATE_INTERVAL,
+            self.config_entry.data.get(CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL),
+        )
+
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema({
                 vol.Optional(
                     CONF_UPDATE_INTERVAL,
-                    default=self.config_entry.options.get(
-                        CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL
-                    ),
+                    default=current_update_interval,
                     description=update_interval_description,
-                ): int,
+                ): vol.All(vol.Coerce(int), vol.Range(min=60, max=86400)),
             })
         )
