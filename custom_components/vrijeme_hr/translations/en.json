@@ -6,12 +6,7 @@
                 "title": "Select Integration Type",
                 "description": "Choose how you want to display weather data",
                 "data": {
-                    "integration_type": "Integration Type",
-                    "integration_type_options": {
-                        "sensor": "Sensors Only",
-                        "weather": "Weather Only",
-                        "both": "Both Weather and Sensors"
-                    }
+                    "integration_type": "Integration Type"
                 }
             },
             "city": {
