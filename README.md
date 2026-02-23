@@ -2,69 +2,81 @@
 
 [![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
 
-`vrijeme_hr` je neslužbena Home Assistant integracija za prikaz trenutnih meteoroloških podataka iz DHMZ XML izvora.
+`vrijeme_hr` is an unofficial Home Assistant weather integration for Croatia that exposes current observations as sensors and/or a weather entity.
 
-## Što integracija radi
-- dohvaća trenutna mjerenja za odabrani grad
-- može kreirati `sensor`, `weather` ili oba tipa entiteta
-- konfiguracija ide kroz Home Assistant UI (`config_flow`)
-- interval osvježavanja je podesiv
+## What this integration does
+- Fetches current weather measurements for a selected Croatian city
+- Supports `sensor`, `weather`, or both
+- Uses Home Assistant UI config flow
+- Supports configurable update interval
 
-## Važno
-- Integracija daje **trenutne uvjete** (observations), ne višednevnu prognozu.
+## Important limitation
+This integration provides **current observations only** (not multi-day forecast output).
 
-## Izvor podataka
-- Source: **DHMZ (Croatian Meteorological and Hydrological Service)**
-- Podaci se dohvaćaju iz javnog DHMZ XML feeda.
+## Data source
+- Source: DHMZ (Croatian Meteorological and Hydrological Service)
+- Data is fetched from public DHMZ XML feeds.
 
-## Instalacija
-### HACS (preporučeno)
-1. Otvori HACS.
-2. Idi na `Integrations`.
-3. U `Custom repositories` dodaj ovaj repo kao `Integration`.
-4. Instaliraj `Vrijeme HR`.
-5. Restartaj Home Assistant.
+## Quick start
+1. Install via HACS (Custom Repository) or copy manually to `custom_components/vrijeme_hr`.
+2. Restart Home Assistant.
+3. Add integration in Devices & Services.
+4. Select city and preferred integration type.
 
-### Ručno
-1. Kopiraj `custom_components/vrijeme_hr` u svoj HA `custom_components` direktorij.
-2. Restartaj Home Assistant.
+## Installation
+### HACS (recommended)
+1. Open HACS.
+2. Go to `Integrations`.
+3. Open `Custom repositories`.
+4. Add this repository as category `Integration`.
+5. Install `Vrijeme HR`.
+6. Restart Home Assistant.
 
-## Konfiguracija
-1. `Settings` -> `Devices & Services` -> `Add Integration`.
-2. Potraži `Vrijeme HR`.
-3. Odaberi:
-   - tip integracije (`sensor`, `weather`, `both`)
-   - grad
-   - interval osvježavanja
+### Manual
+1. Copy `custom_components/vrijeme_hr` into your HA `custom_components` directory.
+2. Restart Home Assistant.
 
-## Dostupni senzori
-- temperatura
-- vlaga
-- tlak
-- tendencija tlaka
-- brzina vjetra
-- smjer vjetra
-- opis stanja
-- geografska širina
-- geografska dužina
+## Configuration
+`Settings -> Devices & Services -> Add Integration -> Vrijeme HR`
 
-## Pouzdanost i ponašanje
-- robustnije parsiranje numeričkih vrijednosti iz feeda
-- zaštita od neispravnih/praznih vrijednosti
-- reload opcija nakon promjene postavki
-- sprječavanje duplih unosa istog grada
+Choose:
+- integration type (`sensor`, `weather`, `both`)
+- city
+- update interval
 
-## HACS update flow
-HACS prikazuje update kada postoji novi release/tag i veći `version` u `manifest.json`.
+## Available sensor fields
+- temperature
+- humidity
+- pressure
+- pressure tendency
+- wind speed
+- wind direction
+- weather condition
+- latitude
+- longitude
 
-Preporučeni flow:
-1. Povećaj `custom_components/vrijeme_hr/manifest.json` -> `version`.
-2. Merge/push na `main`.
-3. Objavi release/tag `vX.Y.Z`.
+## Reliability notes
+- Robust numeric parsing for XML values
+- Better handling of missing/invalid data
+- Options changes reload properly
+- Duplicate city entries are prevented
+
+## Troubleshooting
+- If city list is empty: source feed may be temporarily unavailable.
+- If entities are `unknown/unavailable`: wait for next poll and check HA logs.
+- If values look stale: verify integration reload and network access.
+
+## HACS updates
+HACS shows updates when a newer release/tag exists and `manifest.json` version is higher.
+
+Recommended release flow:
+1. Bump `custom_components/vrijeme_hr/manifest.json` version.
+2. Push to `main`.
+3. Publish release/tag `vX.Y.Z`.
 
 ## Attribution
 - Data source: DHMZ
-- Ova integracija je neslužbena i nije službeni DHMZ proizvod.
+- This is an unofficial community integration and not an official DHMZ product.
 
-## Podrška
-Bugove i prijedloge prijavi kroz GitHub Issues.
+## Support
+Please use GitHub Issues for bug reports and feature requests.
