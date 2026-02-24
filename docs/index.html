@@ -370,15 +370,6 @@ const T={
       <span class="px-5 py-2.5 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-400 text-sm font-mono" data-t="badge_os"></span>
     </div>
 
-    <!-- Live weather strip -->
-    <div class="mt-10 inline-flex items-center gap-6 px-6 py-3 rounded-2xl bg-sky-500/5 border border-sky-500/15 text-sm font-mono text-slate-500 dark:text-slate-400">
-      <span>🌡️ Zagreb · DHMZ</span>
-      <span class="text-slate-300 dark:text-slate-600">|</span>
-      <span>⛅ v1.0.1</span>
-      <span class="text-slate-300 dark:text-slate-600">|</span>
-      <span>Python · 100%</span>
-    </div>
-
     <div class="mt-14 flex flex-col items-center gap-2 text-slate-400 dark:text-slate-600">
       <span class="text-xs font-mono tracking-widest uppercase" data-t="scroll"></span>
       <div class="flex gap-1">
@@ -535,6 +526,8 @@ const T={
 <!-- ═════ ORIGIN + CONFIG ═════ -->
 <section class="py-28 px-6">
   <div class="max-w-5xl mx-auto">
+
+    <!-- Header -->
     <div class="reveal mb-12">
       <div class="flex items-center gap-3 mb-4">
         <span class="sn text-sky-500 bg-sky-500/10 px-2.5 py-1 rounded-md">03</span>
@@ -543,81 +536,73 @@ const T={
       <h2 class="font-display font-700 text-slate-800 dark:text-white" style="font-size:clamp(2rem,5vw,3.25rem);line-height:1.15" data-t="s03_title"></h2>
     </div>
 
-    <div class="grid lg:grid-cols-3 gap-7">
+    <!-- ROW 1: Description text (full width) -->
+    <div class="reveal mb-6">
+      <div class="rounded-2xl p-8 bg-white dark:bg-white/[0.03] border border-slate-200/60 dark:border-white/5 space-y-5">
+        <p class="text-lg text-slate-600 dark:text-slate-400 leading-relaxed" data-t="cfg_p1"></p>
+        <p class="text-lg text-slate-600 dark:text-slate-400 leading-relaxed" data-t="cfg_p2"></p>
+        <p class="text-lg text-slate-600 dark:text-slate-400 leading-relaxed" data-t="cfg_p3"></p>
+      </div>
+    </div>
 
-      <!-- Config description -->
-      <div class="lg:col-span-2 reveal">
-        <div class="rounded-2xl p-8 bg-white dark:bg-white/[0.03] border border-slate-200/60 dark:border-white/5 h-full space-y-5 mb-6">
-          <p class="text-lg text-slate-600 dark:text-slate-400 leading-relaxed" data-t="cfg_p1"></p>
-          <p class="text-lg text-slate-600 dark:text-slate-400 leading-relaxed" data-t="cfg_p2"></p>
-          <p class="text-lg text-slate-600 dark:text-slate-400 leading-relaxed" data-t="cfg_p3"></p>
+    <!-- ROW 2: Config flow box (full width) -->
+    <div class="reveal mb-10">
+      <div class="rounded-2xl border border-sky-500/20 bg-sky-500/[0.03] dark:bg-sky-500/[0.05] p-7">
+        <p class="text-sm font-mono text-sky-500 uppercase tracking-wider mb-6">Config flow</p>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <div>
+            <p class="text-xs text-slate-400 font-mono mb-2 uppercase tracking-wide" data-t="cfg_type"></p>
+            <code class="font-mono text-base text-sky-600 dark:text-sky-400" data-t="cfg_opts"></code>
+          </div>
+          <div>
+            <p class="text-xs text-slate-400 font-mono mb-2 uppercase tracking-wide" data-t="cfg_city"></p>
+            <code class="font-mono text-base text-sky-600 dark:text-sky-400">Zagreb, Split, Rijeka…</code>
+          </div>
+          <div>
+            <p class="text-xs text-slate-400 font-mono mb-2 uppercase tracking-wide" data-t="cfg_interval"></p>
+            <code class="font-mono text-base text-sky-600 dark:text-sky-400">300s – 3600s</code>
+          </div>
         </div>
-
-        <!-- Config fields visual -->
-        <div class="rounded-2xl border border-sky-500/20 bg-sky-500/[0.03] dark:bg-sky-500/[0.05] p-7">
-          <p class="text-sm font-mono text-sky-500 uppercase tracking-wider mb-6">Config flow</p>
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
-            <div>
-              <p class="text-xs text-slate-400 font-mono mb-2 uppercase tracking-wide" data-t="cfg_type"></p>
-              <code class="font-mono text-base text-sky-600 dark:text-sky-400" data-t="cfg_opts"></code>
-            </div>
-            <div>
-              <p class="text-xs text-slate-400 font-mono mb-2 uppercase tracking-wide" data-t="cfg_city"></p>
-              <code class="font-mono text-base text-sky-600 dark:text-sky-400">Zagreb, Split, Rijeka…</code>
-            </div>
-            <div>
-              <p class="text-xs text-slate-400 font-mono mb-2 uppercase tracking-wide" data-t="cfg_interval"></p>
-              <code class="font-mono text-base text-sky-600 dark:text-sky-400">300s – 3600s</code>
-            </div>
-          </div>
-
-          <!-- Note -->
-          <div class="mt-6 pt-5 border-t border-sky-500/15 flex gap-3">
-            <span class="text-sky-400 text-lg flex-shrink-0">ℹ️</span>
-            <p class="text-sm text-slate-500 dark:text-slate-400"><strong class="text-slate-700 dark:text-slate-300 font-600" data-t="cfg_note"></strong>: <span data-t="cfg_note_body"></span></p>
-          </div>
+        <div class="mt-6 pt-5 border-t border-sky-500/15 flex gap-3 items-start">
+          <span class="text-base flex-shrink-0 mt-0.5">ℹ️</span>
+          <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+            <strong class="text-slate-700 dark:text-slate-300 font-600" data-t="cfg_note"></strong>: <span data-t="cfg_note_body"></span>
+          </p>
         </div>
       </div>
+    </div>
 
-      <!-- Author + Source -->
-      <div class="space-y-5 reveal" style="transition-delay:.1s">
-        <div class="rounded-2xl p-6 bg-white dark:bg-white/[0.03] border border-slate-200/60 dark:border-white/5">
-          <p class="text-xs font-mono text-slate-400 uppercase tracking-wider mb-4" data-t="author_label"></p>
-          <div class="flex items-center gap-3">
-            <div class="w-12 h-12 rounded-full bg-sky-500/15 flex items-center justify-center text-sky-600 dark:text-sky-400 font-display font-700 text-xl flex-shrink-0">B</div>
-            <div>
-              <p class="font-display font-600 text-lg text-slate-800 dark:text-white">BrunoAFK</p>
-              <a href="https://github.com/BrunoAFK" target="_blank" class="text-sm font-mono text-sky-500 hover:text-sky-600 transition-colors">@BrunoAFK on GitHub</a>
+    <!-- ROW 3: Single combined info strip -->
+    <div class="reveal">
+      <div class="rounded-2xl bg-white dark:bg-white/[0.03] border border-slate-200/60 dark:border-white/5 overflow-hidden">
+        <div class="flex flex-col sm:flex-row divide-y sm:divide-y-0 sm:divide-x divide-slate-100 dark:divide-white/5">
+          <div class="flex-1 p-5">
+            <p class="text-xs font-mono text-slate-400 uppercase tracking-wider mb-3" data-t="author_label"></p>
+            <div class="flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-full bg-sky-500/15 flex items-center justify-center text-sky-600 dark:text-sky-400 font-display font-700 text-base flex-shrink-0">B</div>
+              <div><p class="font-display font-600 text-sm text-slate-800 dark:text-white">BrunoAFK</p><a href="https://github.com/BrunoAFK" target="_blank" class="text-xs font-mono text-sky-500 hover:text-sky-600 transition-colors">@BrunoAFK</a></div>
             </div>
           </div>
-        </div>
-
-        <div class="rounded-2xl p-6 bg-white dark:bg-white/[0.03] border border-slate-200/60 dark:border-white/5">
-          <p class="text-xs font-mono text-slate-400 uppercase tracking-wider mb-4" data-t="tech_label"></p>
-          <div class="flex flex-wrap gap-2">
-            <span class="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-white/5 text-sm font-mono text-slate-600 dark:text-slate-400">Python</span>
-            <span class="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-white/5 text-sm font-mono text-slate-600 dark:text-slate-400">XML</span>
-            <span class="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-white/5 text-sm font-mono text-slate-600 dark:text-slate-400">Home Assistant</span>
-            <span class="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-white/5 text-sm font-mono text-slate-600 dark:text-slate-400">HACS</span>
-          </div>
-        </div>
-
-        <div class="rounded-2xl p-6 bg-white dark:bg-white/[0.03] border border-slate-200/60 dark:border-white/5">
-          <p class="text-xs font-mono text-slate-400 uppercase tracking-wider mb-4" data-t="source_label"></p>
-          <div class="flex items-start gap-3">
-            <span class="text-3xl mt-0.5">🌦️</span>
-            <div>
-              <p class="font-display font-600 text-base text-slate-800 dark:text-white">DHMZ</p>
-              <p class="text-sm text-slate-500 dark:text-slate-400" data-t="source_name"></p>
-              <a href="https://meteo.hr" target="_blank" class="text-xs font-mono text-sky-500 hover:underline mt-1 inline-block">meteo.hr →</a>
+          <div class="flex-1 p-5">
+            <p class="text-xs font-mono text-slate-400 uppercase tracking-wider mb-3" data-t="tech_label"></p>
+            <div class="flex flex-wrap gap-1.5">
+              <span class="px-2 py-1 rounded-md bg-slate-100 dark:bg-white/5 text-xs font-mono text-slate-600 dark:text-slate-400">Python</span>
+              <span class="px-2 py-1 rounded-md bg-slate-100 dark:bg-white/5 text-xs font-mono text-slate-600 dark:text-slate-400">XML</span>
+              <span class="px-2 py-1 rounded-md bg-slate-100 dark:bg-white/5 text-xs font-mono text-slate-600 dark:text-slate-400">Home Assistant</span>
+              <span class="px-2 py-1 rounded-md bg-slate-100 dark:bg-white/5 text-xs font-mono text-slate-600 dark:text-slate-400">HACS</span>
             </div>
           </div>
-        </div>
-
-        <!-- Origin summary -->
-        <div class="rounded-2xl p-6 bg-white dark:bg-white/[0.03] border border-slate-200/60 dark:border-white/5">
-          <p class="text-xs font-mono text-slate-400 uppercase tracking-wider mb-4">Origin</p>
-          <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed" data-t="origin_p1"></p>
+          <div class="flex-1 p-5">
+            <p class="text-xs font-mono text-slate-400 uppercase tracking-wider mb-3" data-t="source_label"></p>
+            <div class="flex items-center gap-2.5">
+              <span class="text-xl flex-shrink-0">🌦️</span>
+              <div><p class="font-display font-600 text-sm text-slate-800 dark:text-white">DHMZ</p><a href="https://meteo.hr" target="_blank" class="text-xs font-mono text-sky-500 hover:underline">meteo.hr →</a></div>
+            </div>
+          </div>
+          <div class="flex-[2] p-5">
+            <p class="text-xs font-mono text-slate-400 uppercase tracking-wider mb-3">Origin</p>
+            <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed" data-t="origin_p1"></p>
+          </div>
         </div>
       </div>
     </div>
@@ -744,7 +729,7 @@ const T={
       <a href="https://github.com/BrunoAFK/vrijeme_hr/releases" target="_blank" class="card block p-6 bg-white dark:bg-white/[0.03] shadow-sm dark:shadow-none group">
         <div class="text-2xl mb-4">🏷️</div>
         <h4 class="font-display font-600 text-base text-slate-800 dark:text-white mb-2 group-hover:text-sky-500 transition-colors" data-t="d4_title"></h4>
-        <p class="text-sm text-slate-400 font-mono">v1.0.1 · Latest</p>
+        <p class="text-sm text-slate-400 font-mono">Latest release</p>
       </a>
     </div>
 
